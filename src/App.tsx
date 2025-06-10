@@ -12,15 +12,7 @@ import { useEffect } from 'react';
 const DEFAULT_WAGES = {
   chino: 25,
   cosme: 25,
-  pelayo: 25,
-  chief: 25,
-  daniel: 25,
-  rudy: 24,
-  intern: 13,
-  brendon: 13,
-  chengetai: 13,
-  matarutse: 13,
-  rey: 20,
+  
   sam: 15,
 };
 const [isLoggedIn, setIsLoggedIn] = useState(false);
