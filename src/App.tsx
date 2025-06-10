@@ -6,7 +6,7 @@ import EmployeeManagement from './components/EmployeeManagement';
 import CostChart from './components/CostChart';
 import SummarySection from './components/SummarySection';
 import ProfitAnalysis from './components/ProfitAnalysis';
-import Login from './login'; // Make sure this file exists and is named correctly
+import Login from './login';
 
 const DEFAULT_WAGES = {
   chino: 25,
@@ -23,6 +23,16 @@ const DEFAULT_WAGES = {
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [jobRevenue, setJobRevenue] = useState<number>(0);
+  const [fuelCost, setFuelCost] = useState<number>(0);
+  const [vehicleCosts, setVehicleCosts] = useState<number>(0);
+  const [equipmentCosts, setEquipmentCosts] = useState<number>(0);
+  const [materialsCosts, setMaterialsCosts] = useState<number>(0);
+  const [overheadPercentage, setOverheadPercentage] = useState<number>(15);
+  const [hoursWorked, setHoursWorked] = useState<Record<string, number>>({});
+  const [showResults, setShowResults] = useState<boolean>(false);
+  const [employees, setEmployees] = useState<Record<string, number>>(DEFAULT_WAGES);
+  const [activeTab, setActiveTab] = useState<'analysis' | 'employees'>('analysis');
 
   useEffect(() => {
     const auth = localStorage.getItem('auth');
@@ -33,41 +43,38 @@ function App() {
     return <Login onLogin={() => setIsLoggedIn(true)} />;
   }
 
-  const [jobRevenue, setJobRevenue] = useState(0);
-  const [fuelCost, setFuelCost] = useState(0);
-  const [vehicleCosts, setVehicleCosts] = useState(0);
-  const [equipmentCosts, setEquipmentCosts] = useState(0);
-  const [materialsCosts, setMaterialsCosts] = useState(0);
-  const [overheadPercentage, setOverheadPercentage] = useState(15);
-  const [hoursWorked, setHoursWorked] = useState({});
-  const [showResults, setShowResults] = useState(false);
-  const [employees, setEmployees] = useState(DEFAULT_WAGES);
-  const [activeTab, setActiveTab] = useState('analysis');
+  console.log("✅ Logged in. Rendering dashboard.");
 
-  const handleHoursChange = (name, hours) => {
-    setHoursWorked(prev => ({ ...prev, [name]: hours }));
+  const handleHoursChange = (name: string, hours: number) => {
+    setHoursWorked(prev => ({
+      ...prev,
+      [name]: hours
+    }));
   };
 
-  const handleEmployeesChange = (newEmployees) => {
+  const handleEmployeesChange = (newEmployees: Record<string, number>) => {
     setEmployees(newEmployees);
-    const updatedHours = {};
-    Object.keys(newEmployees).forEach(name => {
-      if (hoursWorked[name]) {
-        updatedHours[name] = hoursWorked[name];
-      }
+    setHoursWorked(prev => {
+      const updatedHours: Record<string, number> = {};
+      Object.keys(newEmployees).forEach(name => {
+        if (prev[name]) {
+          updatedHours[name] = prev[name];
+        }
+      });
+      return updatedHours;
     });
-    setHoursWorked(updatedHours);
   };
 
   const calculations = useMemo(() => {
-    const laborCosts = {};
+    const laborCosts: Record<string, number> = {};
     Object.entries(hoursWorked).forEach(([name, hours]) => {
-      if (hours > 0 && employees[name]) {
-        laborCosts[name] = hours * employees[name];
+      const wage = employees[name] ?? 0;
+      if (hours > 0 && wage > 0) {
+        laborCosts[name] = hours * wage;
       }
     });
 
-    const totalLaborCost = Object.values(laborCosts).reduce((sum, val) => sum + val, 0);
+    const totalLaborCost = Object.values(laborCosts).reduce((sum, cost) => sum + cost, 0);
     const totalDirectCosts = totalLaborCost + fuelCost + vehicleCosts + equipmentCosts + materialsCosts;
     const overheadCosts = (totalDirectCosts * overheadPercentage) / 100;
     const totalCost = totalDirectCosts + overheadCosts;
@@ -75,7 +82,7 @@ function App() {
     const profitMargin = jobRevenue > 0 ? (profit / jobRevenue) * 100 : 0;
     const breakEvenRevenue = totalCost;
 
-    const totalHours = Object.values(hoursWorked).reduce((sum, h) => sum + h, 0);
+    const totalHours = Object.values(hoursWorked).reduce((sum, hours) => sum + hours, 0);
     const costPerHour = totalHours > 0 ? totalCost / totalHours : 0;
     const revenuePerHour = totalHours > 0 ? jobRevenue / totalHours : 0;
 
@@ -90,31 +97,18 @@ function App() {
       breakEvenRevenue,
       costPerHour,
       revenuePerHour,
-      totalHours,
+      totalHours
     };
   }, [hoursWorked, fuelCost, vehicleCosts, equipmentCosts, materialsCosts, overheadPercentage, jobRevenue, employees]);
 
   const handleAnalyze = () => setShowResults(true);
 
-  const hasData =
-    jobRevenue > 0 ||
-    Object.values(hoursWorked).some(hours => hours > 0) ||
-    fuelCost > 0 ||
-    vehicleCosts > 0 ||
-    equipmentCosts > 0 ||
-    materialsCosts > 0;
-
-  console.log("✅ Dashboard loaded", {
-    jobRevenue,
-    fuelCost,
-    employees,
-    hoursWorked,
-    calculations,
-  });
+  const hasData = jobRevenue > 0 || Object.values(hoursWorked).some(h => h > 0) || fuelCost > 0 || vehicleCosts > 0 || equipmentCosts > 0 || materialsCosts > 0;
 
   return (
-    <div className="min-h-screen py-8 px-4">
+    <div className="min-h-screen py-8 px-4 bg-gray-50">
       <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="p-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-lg">
@@ -125,7 +119,6 @@ function App() {
             </h1>
           </div>
           <p className="text-xl text-gray-600 font-medium">Advanced Job Cost Analyzer</p>
-          <p className="text-gray-500 mt-2">Comprehensive profit analysis with detailed business metrics</p>
         </div>
 
         {/* Tabs */}
@@ -135,9 +128,7 @@ function App() {
               <button
                 onClick={() => setActiveTab('analysis')}
                 className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
-                  activeTab === 'analysis'
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
+                  activeTab === 'analysis' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg' : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
                 }`}
               >
                 Job Analysis
@@ -145,9 +136,7 @@ function App() {
               <button
                 onClick={() => setActiveTab('employees')}
                 className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
-                  activeTab === 'employees'
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
+                  activeTab === 'employees' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg' : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
                 }`}
               >
                 Manage Employees
@@ -181,10 +170,7 @@ function App() {
 
             {hasData && (
               <div className="text-center">
-                <button
-                  onClick={handleAnalyze}
-                  className="btn-primary inline-flex items-center gap-2"
-                >
+                <button onClick={handleAnalyze} className="btn-primary inline-flex items-center gap-2">
                   <BarChart3 className="h-5 w-5" />
                   Analyze Job Cost & Profitability
                 </button>
@@ -227,26 +213,16 @@ function App() {
                 />
               </div>
             )}
-
-            {!hasData && (
-              <div className="glass-card p-12 rounded-2xl text-center">
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                  Ready to Analyze Your Job
-                </h3>
-                <p className="text-gray-600">
-                  Enter job revenue, team hours, and costs to see detailed metrics.
-                </p>
-              </div>
-            )}
           </div>
         ) : (
-          <EmployeeManagement employees={employees} onEmployeesChange={handleEmployeesChange} />
+          <EmployeeManagement
+            employees={employees}
+            onEmployeesChange={handleEmployeesChange}
+          />
         )}
 
         <div className="text-center mt-16 pt-8 border-t border-gray-200">
-          <p className="text-gray-500 text-sm">
-            Built for Swift & Gentle Moving Company • Advanced Job Cost & Profit Analysis
-          </p>
+          <p className="text-gray-500 text-sm">Built for Swift & Gentle Moving Company</p>
         </div>
       </div>
     </div>
