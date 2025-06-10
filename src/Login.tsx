@@ -15,7 +15,7 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
       localStorage.setItem('auth', 'true');
       onLogin(); // login success
     } else {
-      alert('❌ Invalid username or password');
+      alert('❌🙌🙌 Invalid username or password');
     }
   };
 
