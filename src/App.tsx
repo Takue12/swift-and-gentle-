@@ -6,6 +6,8 @@ import EmployeeManagement from './components/EmployeeManagement';
 import CostChart from './components/CostChart';
 import SummarySection from './components/SummarySection';
 import ProfitAnalysis from './components/ProfitAnalysis';
+import Login from './pages/Login';
+import { useEffect } from 'react';
 
 const DEFAULT_WAGES = {
   chino: 25,
@@ -21,7 +23,17 @@ const DEFAULT_WAGES = {
   rey: 20,
   sam: 15,
 };
+const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+useEffect(() => {
+  const auth = localStorage.getItem('auth');
+  if (auth === 'true') setIsLoggedIn(true);
+}, []);
+
+if (!isLoggedIn) {
+  return <Login onLogin={() => setIsLoggedIn(true)} />;
+}
+#MADE SOME CHANGES HERE 
 function App() {
   const [jobRevenue, setJobRevenue] = useState<number>(0);
   const [fuelCost, setFuelCost] = useState<number>(0);
