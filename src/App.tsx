@@ -6,7 +6,7 @@ import EmployeeManagement from './components/EmployeeManagement';
 import CostChart from './components/CostChart';
 import SummarySection from './components/SummarySection';
 import ProfitAnalysis from './components/ProfitAnalysis';
-import login from './login';
+import Login from './login';
 import { useEffect } from 'react';
 
 const DEFAULT_WAGES = {
