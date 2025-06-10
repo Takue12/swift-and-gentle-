@@ -15,7 +15,10 @@ const DEFAULT_WAGES = {
   
   sam: 15,
 };
-const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+
+function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
 useEffect(() => {
   const auth = localStorage.getItem('auth');
@@ -25,8 +28,6 @@ useEffect(() => {
 if (!isLoggedIn) {
   return <Login onLogin={() => setIsLoggedIn(true)} />;
 }
-
-function App() {
   const [jobRevenue, setJobRevenue] = useState<number>(0);
   const [fuelCost, setFuelCost] = useState<number>(0);
   const [vehicleCosts, setVehicleCosts] = useState<number>(0);
