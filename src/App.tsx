@@ -25,7 +25,7 @@ useEffect(() => {
 if (!isLoggedIn) {
   return <Login onLogin={() => setIsLoggedIn(true)} />;
 }
-#MADE SOME CHANGES HERE 
+
 function App() {
   const [jobRevenue, setJobRevenue] = useState<number>(0);
   const [fuelCost, setFuelCost] = useState<number>(0);
