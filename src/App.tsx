@@ -108,7 +108,16 @@ if (!isLoggedIn) {
 
   const hasData = jobRevenue > 0 || Object.values(hoursWorked).some(hours => hours > 0) || 
                   fuelCost > 0 || vehicleCosts > 0 || equipmentCosts > 0 || materialsCosts > 0;
- 
+  
+  console.log("Rendering dashboard with:", {
+  employees,
+  hoursWorked,
+  jobRevenue,
+  fuelCost,
+  calculations,
+});
+
+
 
   return (
     <div className="min-h-screen py-8 px-4">
