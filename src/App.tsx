@@ -101,13 +101,8 @@ if (!isLoggedIn) {
 
   const hasData = jobRevenue > 0 || Object.values(hoursWorked).some(hours => hours > 0) || 
                   fuelCost > 0 || vehicleCosts > 0 || equipmentCosts > 0 || materialsCosts > 0;
-  return (
-  <div style={{ padding: '2rem', fontSize: '1.5rem' }}>
-    ✅ Login successful. Dashboard loaded!
-  </div>
-);
+ 
 
-/*
   return (
     <div className="min-h-screen py-8 px-4">
       <div className="max-w-7xl mx-auto">
