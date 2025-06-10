@@ -12,8 +12,15 @@ import { useEffect } from 'react';
 const DEFAULT_WAGES = {
   chino: 25,
   cosme: 25,
-  
+  chief: 25,
+  daniel: 25,
+  brendon: 13,
+  chengetai: 13,
+  matarutse: 13,
+  rey: 20,
+  intern: 13,
   sam: 15,
+  
 };
 
 
