@@ -5,7 +5,6 @@ import TeamHoursSection from './components/TeamHoursSection';
 import SummarySection from './components/SummarySection';
 import ProfitAnalysis from './components/ProfitAnalysis';
 import CostChart from './components/CostChart';
-import { FaDollarSign, FaChartLine, FaTools, FaSave, FaHistory } from 'react-icons/fa';
 
 const DEFAULT_WAGES = {
   chino: 25,
@@ -32,38 +31,13 @@ function App() {
   const [hoursWorked, setHoursWorked] = useState<Record<string, number>>({});
   const [showResults, setShowResults] = useState<boolean>(false);
 
-  const [customerName, setCustomerName] = useState<string>('');
-  const [additionalServices, setAdditionalServices] = useState<Record<string, number>>({});
-  const [activeTab, setActiveTab] = useState<'job' | 'team' | 'results' | 'history'>('job');
-  const [savedJobs, setSavedJobs] = useState<any[]>([]);
-
   useEffect(() => {
     const auth = localStorage.getItem('auth');
     if (auth === 'true') setIsLoggedIn(true);
-    const saved = localStorage.getItem('savedJobs');
-    if (saved) setSavedJobs(JSON.parse(saved));
   }, []);
 
   const handleHoursChange = (name: string, hours: number) => {
     setHoursWorked(prev => ({ ...prev, [name]: hours }));
-  };
-
-  const handleServiceChange = (service: string, value: number) => {
-    setAdditionalServices(prev => ({ ...prev, [service]: value }));
-  };
-
-  const handleSaveJob = () => {
-    const jobData = {
-      date: new Date().toLocaleString(),
-      customerName,
-      revenue: calculations.totalServicesRevenue,
-      profit: calculations.profit,
-      cost: calculations.totalCost
-    };
-    const updatedJobs = [...savedJobs, jobData];
-    setSavedJobs(updatedJobs);
-    localStorage.setItem('savedJobs', JSON.stringify(updatedJobs));
-    alert('Job saved successfully!');
   };
 
   const calculations = useMemo(() => {
@@ -75,17 +49,16 @@ function App() {
     });
 
     const totalLaborCost = Object.values(laborCosts).reduce((sum, cost) => sum + cost, 0);
-    const totalServicesRevenue = Object.values(additionalServices).reduce((sum, amount) => sum + amount, 0);
     const totalDirectCosts = totalLaborCost + fuelCost + vehicleCosts + equipmentCosts + materialsCosts;
     const overheadCosts = (totalDirectCosts * overheadPercentage) / 100;
     const totalCost = totalDirectCosts + overheadCosts;
-    const profit = totalServicesRevenue - totalCost;
-    const profitMargin = totalServicesRevenue > 0 ? (profit / totalServicesRevenue) * 100 : 0;
+    const profit = jobRevenue - totalCost;
+    const profitMargin = jobRevenue > 0 ? (profit / jobRevenue) * 100 : 0;
     const breakEvenRevenue = totalCost;
 
     const totalHours = Object.values(hoursWorked).reduce((sum, hours) => sum + hours, 0);
     const costPerHour = totalHours > 0 ? totalCost / totalHours : 0;
-    const revenuePerHour = totalHours > 0 ? totalServicesRevenue / totalHours : 0;
+    const revenuePerHour = totalHours > 0 ? jobRevenue / totalHours : 0;
 
     return {
       laborCosts,
@@ -98,136 +71,65 @@ function App() {
       breakEvenRevenue,
       costPerHour,
       revenuePerHour,
-      totalHours,
-      totalServicesRevenue
+      totalHours
     };
-  }, [hoursWorked, fuelCost, vehicleCosts, equipmentCosts, materialsCosts, overheadPercentage, additionalServices, employees]);
+  }, [hoursWorked, fuelCost, vehicleCosts, equipmentCosts, materialsCosts, overheadPercentage, jobRevenue, employees]);
 
   const handleAnalyze = () => {
     setShowResults(true);
-    setActiveTab('results');
   };
+
+  const hasData = jobRevenue > 0 || Object.values(hoursWorked).some(hours => hours > 0) ||
+    fuelCost > 0 || vehicleCosts > 0 || equipmentCosts > 0 || materialsCosts > 0;
 
   if (!isLoggedIn) return <Login onLogin={() => setIsLoggedIn(true)} />;
 
   return (
-    <div className="min-h-screen flex bg-gray-100">
-      <aside className="w-64 bg-white p-6 shadow-xl">
-        <h2 className="text-xl font-bold text-indigo-700 mb-6">Dashboard</h2>
-        <div className="space-y-4">
-          <div className="p-3 bg-indigo-50 rounded-lg text-center">
-            <div className="text-sm text-indigo-600 flex items-center justify-center gap-2"><FaDollarSign /> Revenue</div>
-            <div className="text-lg font-bold text-indigo-800">${calculations.totalServicesRevenue.toFixed(2)}</div>
-          </div>
-          <div className="p-3 bg-green-50 rounded-lg text-center">
-            <div className="text-sm text-green-600 flex items-center justify-center gap-2"><FaChartLine /> Profit</div>
-            <div className="text-lg font-bold text-green-800">${calculations.profit.toFixed(2)}</div>
-          </div>
-          <div className="p-3 bg-yellow-50 rounded-lg text-center">
-            <div className="text-sm text-yellow-600 flex items-center justify-center gap-2"><FaTools /> Cost</div>
-            <div className="text-lg font-bold text-yellow-800">${calculations.totalCost.toFixed(2)}</div>
-          </div>
+    <div className="min-h-screen py-8 px-4 bg-gradient-to-tr from-indigo-100 via-white to-indigo-100">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-extrabold text-center text-indigo-700 mb-8 drop-shadow-sm">Swift & Gentle Job Cost Analyzer</h1>
+
+        <div className="bg-white rounded-2xl shadow-lg p-8">
+          <JobInfoSection
+            jobRevenue={jobRevenue}
+            fuelCost={fuelCost}
+            vehicleCosts={vehicleCosts}
+            equipmentCosts={equipmentCosts}
+            materialsCosts={materialsCosts}
+            overheadPercentage={overheadPercentage}
+            onJobRevenueChange={setJobRevenue}
+            onFuelCostChange={setFuelCost}
+            onVehicleCostsChange={setVehicleCosts}
+            onEquipmentCostsChange={setEquipmentCosts}
+            onMaterialsCostsChange={setMaterialsCosts}
+            onOverheadPercentageChange={setOverheadPercentage}
+          />
         </div>
 
-        <nav className="space-y-4 mt-6">
-          <button onClick={() => setActiveTab('job')} className={`block w-full text-left px-4 py-2 rounded-lg ${activeTab === 'job' ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'hover:bg-gray-100 text-gray-700'}`}>
-            Job Info
-          </button>
-          <button onClick={() => setActiveTab('team')} className={`block w-full text-left px-4 py-2 rounded-lg ${activeTab === 'team' ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'hover:bg-gray-100 text-gray-700'}`}>
-            Team Hours
-          </button>
-          <button onClick={() => setActiveTab('results')} className={`block w-full text-left px-4 py-2 rounded-lg ${activeTab === 'results' ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'hover:bg-gray-100 text-gray-700'}`}>
-            Results
-          </button>
-          <button onClick={() => setActiveTab('history')} className={`block w-full text-left px-4 py-2 rounded-lg ${activeTab === 'history' ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'hover:bg-gray-100 text-gray-700'}`}>
-            <FaHistory className="inline-block mr-2" /> History
-          </button>
-        </nav>
-      </aside>
+        <div className="mt-10 bg-white rounded-2xl shadow-lg p-8">
+          <TeamHoursSection
+            hoursWorked={hoursWorked}
+            wages={employees}
+            onHoursChange={handleHoursChange}
+          />
+        </div>
 
-      <main className="flex-1 p-10">
-        <div className="max-w-5xl mx-auto">
-          <h1 className="text-4xl font-bold text-center text-indigo-800 mb-10">Swift & Gentle Job Cost Analyzer</h1>
+        {hasData && (
+          <div className="mt-8 text-center">
+            <button
+              onClick={handleAnalyze}
+              className="bg-indigo-600 text-white px-8 py-3 rounded-xl text-lg font-semibold shadow-md hover:bg-indigo-700 transition-all"
+            >
+              Analyze Job
+            </button>
+          </div>
+        )}
 
-          {activeTab === 'history' && (
-            <div>
-              <h2 className="text-2xl font-semibold mb-6">Saved Jobs</h2>
-              {savedJobs.length === 0 ? (
-                <p className="text-gray-500">No saved jobs yet.</p>
-              ) : (
-                <ul className="space-y-4">
-                  {savedJobs.map((job, idx) => (
-                    <li key={idx} className="border rounded-lg p-4 bg-white shadow">
-                      <div className="font-semibold text-indigo-700">{job.customerName}</div>
-                      <div className="text-sm text-gray-500">{job.date}</div>
-                      <div className="mt-2 text-sm">Revenue: ${job.revenue.toFixed(2)}</div>
-                      <div className="text-sm">Profit: ${job.profit.toFixed(2)}</div>
-                      <div className="text-sm">Cost: ${job.cost.toFixed(2)}</div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
-
-          {/* Original Tabs */}
-          {activeTab === 'job' && (
-            <>
-              <div className="mb-6">
-                <label className="block mb-2 text-base font-semibold text-gray-700">Customer Name</label>
-                <input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Enter customer name" />
-              </div>
-
-              <JobInfoSection
-                jobRevenue={jobRevenue}
-                fuelCost={fuelCost}
-                vehicleCosts={vehicleCosts}
-                equipmentCosts={equipmentCosts}
-                materialsCosts={materialsCosts}
-                overheadPercentage={overheadPercentage}
-                onJobRevenueChange={setJobRevenue}
-                onFuelCostChange={setFuelCost}
-                onVehicleCostsChange={setVehicleCosts}
-                onEquipmentCostsChange={setEquipmentCosts}
-                onMaterialsCostsChange={setMaterialsCosts}
-                onOverheadPercentageChange={setOverheadPercentage}
-              />
-
-              <div className="mt-6">
-                <label className="block mb-2 text-base font-semibold text-gray-700">Additional Services</label>
-                {['Packing', 'Storage', 'Junk Removal'].map(service => (
-                  <div key={service} className="mb-4">
-                    <label className="block text-sm font-medium text-gray-600">{service}</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={additionalServices[service] || 0}
-                      onChange={e => handleServiceChange(service, parseFloat(e.target.value) || 0)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                      placeholder={`Revenue from ${service}`}
-                    />
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
-          {activeTab === 'team' && (
-            <TeamHoursSection
-              hoursWorked={hoursWorked}
-              wages={employees}
-              onHoursChange={handleHoursChange}
-            />
-          )}
-
-          {activeTab === 'results' && showResults && (
-            <div className="space-y-10 mt-12">
-              <div className="text-center">
-                <h2 className="text-xl font-semibold text-gray-700">Customer: {customerName || 'N/A'}</h2>
-              </div>
-
+        {showResults && hasData && (
+          <div className="mt-12 space-y-10">
+            <div className="bg-white rounded-2xl shadow-md p-8">
               <ProfitAnalysis
-                jobRevenue={calculations.totalServicesRevenue}
+                jobRevenue={jobRevenue}
                 totalCosts={calculations.totalCost}
                 profit={calculations.profit}
                 profitMargin={calculations.profitMargin}
@@ -236,7 +138,9 @@ function App() {
                 totalHours={calculations.totalHours}
                 revenuePerHour={calculations.revenuePerHour}
               />
+            </div>
 
+            <div className="bg-white rounded-2xl shadow-md p-8">
               <CostChart
                 laborCosts={calculations.laborCosts}
                 fuelCost={fuelCost}
@@ -246,9 +150,11 @@ function App() {
                 overheadCosts={calculations.overheadCosts}
                 profit={calculations.profit}
               />
+            </div>
 
+            <div className="bg-white rounded-2xl shadow-md p-8">
               <SummarySection
-                jobRevenue={calculations.totalServicesRevenue}
+                jobRevenue={jobRevenue}
                 fuelCost={fuelCost}
                 vehicleCosts={vehicleCosts}
                 equipmentCosts={equipmentCosts}
@@ -260,30 +166,10 @@ function App() {
                 laborCosts={calculations.laborCosts}
                 hoursWorked={hoursWorked}
               />
-
-              <div className="text-center">
-                <button
-                  onClick={handleSaveJob}
-                  className="mt-6 bg-green-600 text-white px-6 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-green-700"
-                >
-                  <FaSave /> Save This Job
-                </button>
-              </div>
             </div>
-          )}
-
-          {(jobRevenue > 0 || Object.values(hoursWorked).some(h => h > 0)) && !showResults && (
-            <div className="mt-10 text-center">
-              <button
-                onClick={handleAnalyze}
-                className="bg-indigo-600 text-white px-8 py-3 rounded-xl text-lg font-semibold shadow-md hover:bg-indigo-700 transition"
-              >
-                Analyze Job
-              </button>
-            </div>
-          )}
-        </div>
-      </main>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
