@@ -20,8 +20,7 @@ const DEFAULT_WAGES = {
 };
 
 function App() {
-  const [darkMode, setDarkMode] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [jobRevenue, setJobRevenue] = useState<number>(0);
   const [fuelCost, setFuelCost] = useState<number>(0);
@@ -88,20 +87,16 @@ function App() {
   const hasData = jobRevenue > 0 || Object.values(hoursWorked).some(hours => hours > 0) || fuelCost > 0 || vehicleCosts > 0 || equipmentCosts > 0 || materialsCosts > 0;
 
   return (
-    <div className={darkMode ? 'dark' : ''}>
-    <div className="min-h-screen flex bg-gradient-to-tr from-green-100 via-white to-green-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-gray-100">
+    
+    <div className="min-h-screen flex bg-gradient-to-tr from-green-100 via-white to-green-100">
       <div className="w-64 bg-white shadow-lg border-green-300 p-6 space-y-6 rounded-3xl m-4">
         <h2 className=\"text-xl font-bold text-green-700 dark:text-green-300 mb-4\">Dashboard</h2>
-        <div className='text-sm text-green-600 dark:text-green-200'>
-          <label className='mr-2'>Theme:</label>
-          <button onClick={() => setDarkMode(!darkMode)} className='px-2 py-1 rounded border border-green-400 dark:border-green-200'>
-            {darkMode ? 'Light Mode' : 'Dark Mode'}
-          </button>
+        
         </div>
         <p className="text-sm text-green-600">Customer: <strong>{customerName || 'N/A'}</strong></p>
-        <button className={`w-full text-left px-4 py-2 rounded-full border ${activeTab === 'job' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent'}`} onClick={() => setActiveTab('job')}><span className="mr-2">📋</span>Job Info</button>
-        <button className={`w-full text-left px-4 py-2 rounded border ${activeTab === 'team' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent'}`} onClick={() => setActiveTab('team')}><span className="mr-2">👥</span>Team Hours</button>
-        {showResults && <button className={`w-full text-left px-4 py-2 rounded border ${activeTab === 'results' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent'}`} onClick={() => setActiveTab('results')}><span className="mr-2">📊</span>Results</button>}
+        <button className={`w-full text-left px-4 py-2 rounded-full border ${activeTab === 'job' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent'}`} onClick={() => setActiveTab('job')}>Job Info</button>
+        <button className={`w-full text-left px-4 py-2 rounded-full border ${activeTab === 'team' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent'}`} onClick={() => setActiveTab('team')}>Team Hours</button>
+        {showResults && <button className={`w-full text-left px-4 py-2 rounded border ${activeTab === 'results' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent'}`} onClick={() => setActiveTab('results')}>Results</button>}
       </div>
 
       <div className="flex-1 p-8">
