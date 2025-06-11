@@ -88,20 +88,20 @@ function App() {
 
   return (
     <div className="min-h-screen flex bg-gradient-to-tr from-green-100 via-white to-green-100">
-      <div className="w-64 bg-white shadow-md p-6 space-y-6">
+      <div className="w-64 bg-white shadow-lg border-r border-green-300 p-6 space-y-6">
         <h2 className="text-xl font-bold text-green-700 mb-4">Dashboard</h2>
-        <button className={`w-full text-left px-4 py-2 rounded ${activeTab === 'job' ? 'bg-green-200 font-semibold' : ''}`} onClick={() => setActiveTab('job')}>Job Info</button>
-        <button className={`w-full text-left px-4 py-2 rounded ${activeTab === 'team' ? 'bg-green-200 font-semibold' : ''}`} onClick={() => setActiveTab('team')}>Team Hours</button>
-        {showResults && <button className={`w-full text-left px-4 py-2 rounded ${activeTab === 'results' ? 'bg-green-200 font-semibold' : ''}`} onClick={() => setActiveTab('results')}>Results</button>}
+        <button className={`w-full text-left px-4 py-2 rounded border ${activeTab === 'job' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent'}`} onClick={() => setActiveTab('job')}>Job Info</button>
+        <button className={`w-full text-left px-4 py-2 rounded border ${activeTab === 'team' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent'}`} onClick={() => setActiveTab('team')}>Team Hours</button>
+        {showResults && <button className={`w-full text-left px-4 py-2 rounded border ${activeTab === 'results' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent'}`} onClick={() => setActiveTab('results')}>Results</button>}
       </div>
 
-      <div className="flex-1 p-6">
-        <h1 className="text-4xl font-extrabold text-center text-green-700 mb-4 drop-shadow-sm">Swift & Gentle Job Cost Analyzer</h1>
+      <div className="flex-1 p-8">
+        <h1 className="text-4xl font-extrabold text-center text-green-700 mb-6 drop-shadow">Swift & Gentle Job Cost Analyzer</h1>
         <div className="mb-6">
           <label className="block mb-2 text-green-800 font-medium">Customer Name</label>
           <input
             type="text"
-            className="w-full px-4 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+            className="w-full px-4 py-2 border border-green-400 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
             placeholder="Enter customer name"
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
@@ -109,7 +109,7 @@ function App() {
         </div>
 
         {activeTab === 'job' && (
-          <div className="bg-white rounded-2xl shadow-lg p-8">
+          <div className="bg-white rounded-xl shadow-lg border border-green-200 p-8">
             <JobInfoSection
               jobRevenue={jobRevenue}
               fuelCost={fuelCost}
@@ -128,7 +128,7 @@ function App() {
         )}
 
         {activeTab === 'team' && (
-          <div className="bg-white rounded-2xl shadow-lg p-8">
+          <div className="bg-white rounded-xl shadow-lg border border-green-200 p-8">
             <TeamHoursSection
               hoursWorked={hoursWorked}
               wages={employees}
@@ -139,7 +139,7 @@ function App() {
 
         {activeTab === 'results' && showResults && (
           <div className="space-y-10">
-            <div className="bg-white rounded-2xl shadow-md p-8">
+            <div className="bg-white rounded-xl shadow-md border border-green-200 p-8">
               <ProfitAnalysis
                 jobRevenue={jobRevenue}
                 totalCosts={calculations.totalCost}
@@ -151,7 +151,7 @@ function App() {
                 revenuePerHour={calculations.revenuePerHour}
               />
             </div>
-            <div className="bg-white rounded-2xl shadow-md p-8">
+            <div className="bg-white rounded-xl shadow-md border border-green-200 p-8">
               <CostChart
                 laborCosts={calculations.laborCosts}
                 fuelCost={fuelCost}
@@ -162,7 +162,7 @@ function App() {
                 profit={calculations.profit}
               />
             </div>
-            <div className="bg-white rounded-2xl shadow-md p-8">
+            <div className="bg-white rounded-xl shadow-md border border-green-200 p-8">
               <SummarySection
                 jobRevenue={jobRevenue}
                 fuelCost={fuelCost}
@@ -184,7 +184,7 @@ function App() {
           <div className="mt-8 text-center">
             <button
               onClick={handleAnalyze}
-              className="bg-green-600 text-white px-8 py-3 rounded-xl text-lg font-semibold shadow-md hover:bg-green-700 transition-all"
+              className="bg-green-600 text-white px-8 py-3 rounded-xl text-lg font-semibold shadow hover:bg-green-700 transition"
             >
               Analyze Job
             </button>
