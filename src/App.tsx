@@ -4,6 +4,7 @@ import JobInfoSection from './components/JobInfoSection';
 import TeamHoursSection from './components/TeamHoursSection';
 import ProfitAnalysis from './components/ProfitAnalysis';
 import CostChart from './components/CostChart';
+import SummarySection from './components/SummarySection';
 
 const DEFAULT_WAGES = {
   chino: 25,
@@ -69,7 +70,8 @@ function App() {
       profitMargin,
       totalHours,
       costPerHour,
-      revenuePerHour
+      revenuePerHour,
+      breakEvenRevenue: totalCost
     };
   }, [hoursWorked, fuelCost, vehicleCosts, equipmentCosts, materialsCosts, overheadPercentage, jobRevenue, employees]);
 
@@ -124,7 +126,7 @@ function App() {
                 totalCosts={calculations.totalCost}
                 profit={calculations.profit}
                 profitMargin={calculations.profitMargin}
-                breakEvenRevenue={calculations.totalCost}
+                breakEvenRevenue={calculations.breakEvenRevenue}
                 costPerHour={calculations.costPerHour}
                 totalHours={calculations.totalHours}
                 revenuePerHour={calculations.revenuePerHour}
@@ -142,6 +144,22 @@ function App() {
                 profit={calculations.profit}
               />
             </div>
+
+            <div className="mt-8">
+              <SummarySection
+                jobRevenue={jobRevenue}
+                fuelCost={fuelCost}
+                vehicleCosts={vehicleCosts}
+                equipmentCosts={equipmentCosts}
+                materialsCosts={materialsCosts}
+                overheadCosts={calculations.overheadCosts}
+                totalLaborCost={calculations.totalLaborCost}
+                totalCost={calculations.totalCost}
+                profit={calculations.profit}
+                laborCosts={calculations.laborCosts}
+                hoursWorked={hoursWorked}
+              />
+            </div>
           </>
         )}
       </div>
@@ -150,3 +168,4 @@ function App() {
 }
 
 export default App;
+
