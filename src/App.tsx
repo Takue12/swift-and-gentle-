@@ -21,6 +21,7 @@ const DEFAULT_WAGES = {
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [customerName, setCustomerName] = useState('');
   const [jobRevenue, setJobRevenue] = useState<number>(0);
   const [fuelCost, setFuelCost] = useState<number>(0);
   const [vehicleCosts, setVehicleCosts] = useState<number>(0);
@@ -95,7 +96,17 @@ function App() {
       </div>
 
       <div className="flex-1 p-6">
-        <h1 className="text-4xl font-extrabold text-center text-green-700 mb-8 drop-shadow-sm">Swift & Gentle Job Cost Analyzer</h1>
+        <h1 className="text-4xl font-extrabold text-center text-green-700 mb-4 drop-shadow-sm">Swift & Gentle Job Cost Analyzer</h1>
+        <div className="mb-6">
+          <label className="block mb-2 text-green-800 font-medium">Customer Name</label>
+          <input
+            type="text"
+            className="w-full px-4 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+            placeholder="Enter customer name"
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+          />
+        </div>
 
         {activeTab === 'job' && (
           <div className="bg-white rounded-2xl shadow-lg p-8">
