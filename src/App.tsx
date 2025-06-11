@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import Login from './login';
 import JobInfoSection from './components/JobInfoSection';
 import TeamHoursSection from './components/TeamHoursSection';
@@ -31,6 +30,7 @@ function App() {
   const [employees, setEmployees] = useState<Record<string, number>>(DEFAULT_WAGES);
   const [hoursWorked, setHoursWorked] = useState<Record<string, number>>({});
   const [showResults, setShowResults] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'job' | 'team' | 'results'>('job');
 
   useEffect(() => {
     const auth = localStorage.getItem('auth');
@@ -78,107 +78,107 @@ function App() {
 
   const handleAnalyze = () => {
     setShowResults(true);
+    setActiveTab('results');
   };
-
-  const hasData = jobRevenue > 0 || Object.values(hoursWorked).some(hours => hours > 0) ||
-    fuelCost > 0 || vehicleCosts > 0 || equipmentCosts > 0 || materialsCosts > 0;
 
   if (!isLoggedIn) return <Login onLogin={() => setIsLoggedIn(true)} />;
 
+  const hasData = jobRevenue > 0 || Object.values(hoursWorked).some(hours => hours > 0) || fuelCost > 0 || vehicleCosts > 0 || equipmentCosts > 0 || materialsCosts > 0;
+
   return (
-    <div className="min-h-screen py-8 px-4 bg-gradient-to-tr from-indigo-100 via-white to-indigo-100">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-extrabold text-center text-indigo-700 mb-8 drop-shadow-sm">Swift & Gentle Job Cost Analyzer</h1>
+    <div className="min-h-screen flex bg-gradient-to-tr from-green-100 via-white to-green-100">
+      <div className="w-64 bg-white shadow-md p-6 space-y-6">
+        <h2 className="text-xl font-bold text-green-700 mb-4">Dashboard</h2>
+        <button className={`w-full text-left px-4 py-2 rounded ${activeTab === 'job' ? 'bg-green-200 font-semibold' : ''}`} onClick={() => setActiveTab('job')}>Job Info</button>
+        <button className={`w-full text-left px-4 py-2 rounded ${activeTab === 'team' ? 'bg-green-200 font-semibold' : ''}`} onClick={() => setActiveTab('team')}>Team Hours</button>
+        {showResults && <button className={`w-full text-left px-4 py-2 rounded ${activeTab === 'results' ? 'bg-green-200 font-semibold' : ''}`} onClick={() => setActiveTab('results')}>Results</button>}
+      </div>
 
-        <motion.div layout className="bg-white rounded-2xl shadow-lg p-8">
-          <JobInfoSection
-            jobRevenue={jobRevenue}
-            fuelCost={fuelCost}
-            vehicleCosts={vehicleCosts}
-            equipmentCosts={equipmentCosts}
-            materialsCosts={materialsCosts}
-            overheadPercentage={overheadPercentage}
-            onJobRevenueChange={setJobRevenue}
-            onFuelCostChange={setFuelCost}
-            onVehicleCostsChange={setVehicleCosts}
-            onEquipmentCostsChange={setEquipmentCosts}
-            onMaterialsCostsChange={setMaterialsCosts}
-            onOverheadPercentageChange={setOverheadPercentage}
-          />
-        </motion.div>
+      <div className="flex-1 p-6">
+        <h1 className="text-4xl font-extrabold text-center text-green-700 mb-8 drop-shadow-sm">Swift & Gentle Job Cost Analyzer</h1>
 
-        <motion.div layout className="mt-10 bg-white rounded-2xl shadow-lg p-8">
-          <TeamHoursSection
-            hoursWorked={hoursWorked}
-            wages={employees}
-            onHoursChange={handleHoursChange}
-          />
-        </motion.div>
+        {activeTab === 'job' && (
+          <div className="bg-white rounded-2xl shadow-lg p-8">
+            <JobInfoSection
+              jobRevenue={jobRevenue}
+              fuelCost={fuelCost}
+              vehicleCosts={vehicleCosts}
+              equipmentCosts={equipmentCosts}
+              materialsCosts={materialsCosts}
+              overheadPercentage={overheadPercentage}
+              onJobRevenueChange={setJobRevenue}
+              onFuelCostChange={setFuelCost}
+              onVehicleCostsChange={setVehicleCosts}
+              onEquipmentCostsChange={setEquipmentCosts}
+              onMaterialsCostsChange={setMaterialsCosts}
+              onOverheadPercentageChange={setOverheadPercentage}
+            />
+          </div>
+        )}
 
-        {hasData && (
+        {activeTab === 'team' && (
+          <div className="bg-white rounded-2xl shadow-lg p-8">
+            <TeamHoursSection
+              hoursWorked={hoursWorked}
+              wages={employees}
+              onHoursChange={handleHoursChange}
+            />
+          </div>
+        )}
+
+        {activeTab === 'results' && showResults && (
+          <div className="space-y-10">
+            <div className="bg-white rounded-2xl shadow-md p-8">
+              <ProfitAnalysis
+                jobRevenue={jobRevenue}
+                totalCosts={calculations.totalCost}
+                profit={calculations.profit}
+                profitMargin={calculations.profitMargin}
+                breakEvenRevenue={calculations.breakEvenRevenue}
+                costPerHour={calculations.costPerHour}
+                totalHours={calculations.totalHours}
+                revenuePerHour={calculations.revenuePerHour}
+              />
+            </div>
+            <div className="bg-white rounded-2xl shadow-md p-8">
+              <CostChart
+                laborCosts={calculations.laborCosts}
+                fuelCost={fuelCost}
+                vehicleCosts={vehicleCosts}
+                equipmentCosts={equipmentCosts}
+                materialsCosts={materialsCosts}
+                overheadCosts={calculations.overheadCosts}
+                profit={calculations.profit}
+              />
+            </div>
+            <div className="bg-white rounded-2xl shadow-md p-8">
+              <SummarySection
+                jobRevenue={jobRevenue}
+                fuelCost={fuelCost}
+                vehicleCosts={vehicleCosts}
+                equipmentCosts={equipmentCosts}
+                materialsCosts={materialsCosts}
+                overheadCosts={calculations.overheadCosts}
+                totalLaborCost={calculations.totalLaborCost}
+                totalCost={calculations.totalCost}
+                profit={calculations.profit}
+                laborCosts={calculations.laborCosts}
+                hoursWorked={hoursWorked}
+              />
+            </div>
+          </div>
+        )}
+
+        {hasData && activeTab !== 'results' && (
           <div className="mt-8 text-center">
             <button
               onClick={handleAnalyze}
-              className="bg-indigo-600 text-white px-8 py-3 rounded-xl text-lg font-semibold shadow-md hover:bg-indigo-700 transition-all"
+              className="bg-green-600 text-white px-8 py-3 rounded-xl text-lg font-semibold shadow-md hover:bg-green-700 transition-all"
             >
               Analyze Job
             </button>
           </div>
         )}
-
-        <AnimatePresence>
-          {showResults && hasData && (
-            <motion.div
-              layout
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.4 }}
-              className="mt-12 space-y-10"
-            >
-              <div className="bg-white rounded-2xl shadow-md p-8">
-                <ProfitAnalysis
-                  jobRevenue={jobRevenue}
-                  totalCosts={calculations.totalCost}
-                  profit={calculations.profit}
-                  profitMargin={calculations.profitMargin}
-                  breakEvenRevenue={calculations.breakEvenRevenue}
-                  costPerHour={calculations.costPerHour}
-                  totalHours={calculations.totalHours}
-                  revenuePerHour={calculations.revenuePerHour}
-                />
-              </div>
-
-              <div className="bg-white rounded-2xl shadow-md p-8">
-                <CostChart
-                  laborCosts={calculations.laborCosts}
-                  fuelCost={fuelCost}
-                  vehicleCosts={vehicleCosts}
-                  equipmentCosts={equipmentCosts}
-                  materialsCosts={materialsCosts}
-                  overheadCosts={calculations.overheadCosts}
-                  profit={calculations.profit}
-                />
-              </div>
-
-              <div className="bg-white rounded-2xl shadow-md p-8">
-                <SummarySection
-                  jobRevenue={jobRevenue}
-                  fuelCost={fuelCost}
-                  vehicleCosts={vehicleCosts}
-                  equipmentCosts={equipmentCosts}
-                  materialsCosts={materialsCosts}
-                  overheadCosts={calculations.overheadCosts}
-                  totalLaborCost={calculations.totalLaborCost}
-                  totalCost={calculations.totalCost}
-                  profit={calculations.profit}
-                  laborCosts={calculations.laborCosts}
-                  hoursWorked={hoursWorked}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   );
