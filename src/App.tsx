@@ -93,109 +93,130 @@ function App() {
   if (!isLoggedIn) return <Login onLogin={() => setIsLoggedIn(true)} />;
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-4xl font-bold text-center text-indigo-800 mb-10">Swift & Gentle Job Cost Analyzer</h1>
+    <div className="min-h-screen flex bg-gray-100">
+      <aside className="w-64 bg-white p-6 shadow-xl">
+        <h2 className="text-xl font-bold text-indigo-700 mb-6">Menu</h2>
+        <nav className="space-y-4">
+          <button onClick={() => setActiveTab('job')} className={`block w-full text-left px-4 py-2 rounded-lg ${activeTab === 'job' ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'hover:bg-gray-100 text-gray-700'}`}>
+            Job Info
+          </button>
+          <button onClick={() => setActiveTab('team')} className={`block w-full text-left px-4 py-2 rounded-lg ${activeTab === 'team' ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'hover:bg-gray-100 text-gray-700'}`}>
+            Team Hours
+          </button>
+          <button onClick={() => setActiveTab('results')} className={`block w-full text-left px-4 py-2 rounded-lg ${activeTab === 'results' ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'hover:bg-gray-100 text-gray-700'}`}>
+            Results
+          </button>
+        </nav>
+      </aside>
 
-        <div className="mb-6">
-          <label className="block mb-2 text-base font-semibold text-gray-700">Customer Name</label>
-          <input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Enter customer name" />
-        </div>
+      <main className="flex-1 p-10">
+        <div className="max-w-5xl mx-auto">
+          <h1 className="text-4xl font-bold text-center text-indigo-800 mb-10">Swift & Gentle Job Cost Analyzer</h1>
 
-        <JobInfoSection
-          jobRevenue={jobRevenue}
-          fuelCost={fuelCost}
-          vehicleCosts={vehicleCosts}
-          equipmentCosts={equipmentCosts}
-          materialsCosts={materialsCosts}
-          overheadPercentage={overheadPercentage}
-          onJobRevenueChange={setJobRevenue}
-          onFuelCostChange={setFuelCost}
-          onVehicleCostsChange={setVehicleCosts}
-          onEquipmentCostsChange={setEquipmentCosts}
-          onMaterialsCostsChange={setMaterialsCosts}
-          onOverheadPercentageChange={setOverheadPercentage}
-        />
+          {activeTab === 'job' && (
+            <>
+              <div className="mb-6">
+                <label className="block mb-2 text-base font-semibold text-gray-700">Customer Name</label>
+                <input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Enter customer name" />
+              </div>
 
-        <div className="mt-6">
-          <label className="block mb-2 text-base font-semibold text-gray-700">Additional Services</label>
-          {['Packing', 'Storage', 'Junk Removal'].map(service => (
-            <div key={service} className="mb-4">
-              <label className="block text-sm font-medium text-gray-600">{service}</label>
-              <input
-                type="number"
-                min="0"
-                value={additionalServices[service] || 0}
-                onChange={e => handleServiceChange(service, parseFloat(e.target.value) || 0)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                placeholder={`Revenue from ${service}`}
+              <JobInfoSection
+                jobRevenue={jobRevenue}
+                fuelCost={fuelCost}
+                vehicleCosts={vehicleCosts}
+                equipmentCosts={equipmentCosts}
+                materialsCosts={materialsCosts}
+                overheadPercentage={overheadPercentage}
+                onJobRevenueChange={setJobRevenue}
+                onFuelCostChange={setFuelCost}
+                onVehicleCostsChange={setVehicleCosts}
+                onEquipmentCostsChange={setEquipmentCosts}
+                onMaterialsCostsChange={setMaterialsCosts}
+                onOverheadPercentageChange={setOverheadPercentage}
+              />
+
+              <div className="mt-6">
+                <label className="block mb-2 text-base font-semibold text-gray-700">Additional Services</label>
+                {['Packing', 'Storage', 'Junk Removal'].map(service => (
+                  <div key={service} className="mb-4">
+                    <label className="block text-sm font-medium text-gray-600">{service}</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={additionalServices[service] || 0}
+                      onChange={e => handleServiceChange(service, parseFloat(e.target.value) || 0)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                      placeholder={`Revenue from ${service}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {activeTab === 'team' && (
+            <TeamHoursSection
+              hoursWorked={hoursWorked}
+              wages={employees}
+              onHoursChange={handleHoursChange}
+            />
+          )}
+
+          {activeTab === 'results' && showResults && (
+            <div className="space-y-10 mt-12">
+              <div className="text-center">
+                <h2 className="text-xl font-semibold text-gray-700">Customer: {customerName || 'N/A'}</h2>
+              </div>
+
+              <ProfitAnalysis
+                jobRevenue={calculations.totalServicesRevenue}
+                totalCosts={calculations.totalCost}
+                profit={calculations.profit}
+                profitMargin={calculations.profitMargin}
+                breakEvenRevenue={calculations.breakEvenRevenue}
+                costPerHour={calculations.costPerHour}
+                totalHours={calculations.totalHours}
+                revenuePerHour={calculations.revenuePerHour}
+              />
+
+              <CostChart
+                laborCosts={calculations.laborCosts}
+                fuelCost={fuelCost}
+                vehicleCosts={vehicleCosts}
+                equipmentCosts={equipmentCosts}
+                materialsCosts={materialsCosts}
+                overheadCosts={calculations.overheadCosts}
+                profit={calculations.profit}
+              />
+
+              <SummarySection
+                jobRevenue={calculations.totalServicesRevenue}
+                fuelCost={fuelCost}
+                vehicleCosts={vehicleCosts}
+                equipmentCosts={equipmentCosts}
+                materialsCosts={materialsCosts}
+                overheadCosts={calculations.overheadCosts}
+                totalLaborCost={calculations.totalLaborCost}
+                totalCost={calculations.totalCost}
+                profit={calculations.profit}
+                laborCosts={calculations.laborCosts}
+                hoursWorked={hoursWorked}
               />
             </div>
-          ))}
-        </div>
+          )}
 
-        <div className="mt-10">
-          <TeamHoursSection
-            hoursWorked={hoursWorked}
-            wages={employees}
-            onHoursChange={handleHoursChange}
-          />
-        </div>
-
-        {showResults && (
-          <div className="space-y-10 mt-12">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold text-gray-700">Customer: {customerName || 'N/A'}</h2>
+          {(jobRevenue > 0 || Object.values(hoursWorked).some(h => h > 0)) && !showResults && (
+            <div className="mt-10 text-center">
+              <button
+                onClick={handleAnalyze}
+                className="bg-indigo-600 text-white px-8 py-3 rounded-xl text-lg font-semibold shadow-md hover:bg-indigo-700 transition"
+              >
+                Analyze Job
+              </button>
             </div>
-
-            <ProfitAnalysis
-              jobRevenue={calculations.totalServicesRevenue}
-              totalCosts={calculations.totalCost}
-              profit={calculations.profit}
-              profitMargin={calculations.profitMargin}
-              breakEvenRevenue={calculations.breakEvenRevenue}
-              costPerHour={calculations.costPerHour}
-              totalHours={calculations.totalHours}
-              revenuePerHour={calculations.revenuePerHour}
-            />
-
-            <CostChart
-              laborCosts={calculations.laborCosts}
-              fuelCost={fuelCost}
-              vehicleCosts={vehicleCosts}
-              equipmentCosts={equipmentCosts}
-              materialsCosts={materialsCosts}
-              overheadCosts={calculations.overheadCosts}
-              profit={calculations.profit}
-            />
-
-            <SummarySection
-              jobRevenue={calculations.totalServicesRevenue}
-              fuelCost={fuelCost}
-              vehicleCosts={vehicleCosts}
-              equipmentCosts={equipmentCosts}
-              materialsCosts={materialsCosts}
-              overheadCosts={calculations.overheadCosts}
-              totalLaborCost={calculations.totalLaborCost}
-              totalCost={calculations.totalCost}
-              profit={calculations.profit}
-              laborCosts={calculations.laborCosts}
-              hoursWorked={hoursWorked}
-            />
-          </div>
-        )}
-
-        {(jobRevenue > 0 || Object.values(hoursWorked).some(h => h > 0)) && !showResults && (
-          <div className="mt-10 text-center">
-            <button
-              onClick={handleAnalyze}
-              className="bg-indigo-600 text-white px-8 py-3 rounded-xl text-lg font-semibold shadow-md hover:bg-indigo-700 transition"
-            >
-              Analyze Job
-            </button>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
