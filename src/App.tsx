@@ -31,6 +31,9 @@ function App() {
   const [hoursWorked, setHoursWorked] = useState<Record<string, number>>({});
   const [showResults, setShowResults] = useState<boolean>(false);
 
+  const [customerName, setCustomerName] = useState<string>('');
+  const [additionalServices, setAdditionalServices] = useState<Record<string, number>>({});
+
   useEffect(() => {
     const auth = localStorage.getItem('auth');
     if (auth === 'true') setIsLoggedIn(true);
@@ -43,6 +46,13 @@ function App() {
     }));
   };
 
+  const handleServiceChange = (service: string, value: number) => {
+    setAdditionalServices(prev => ({
+      ...prev,
+      [service]: value
+    }));
+  };
+
   const calculations = useMemo(() => {
     const laborCosts: Record<string, number> = {};
     Object.entries(hoursWorked).forEach(([name, hours]) => {
@@ -52,16 +62,17 @@ function App() {
     });
 
     const totalLaborCost = Object.values(laborCosts).reduce((sum, cost) => sum + cost, 0);
+    const totalServicesRevenue = Object.values(additionalServices).reduce((sum, amount) => sum + amount, 0);
     const totalDirectCosts = totalLaborCost + fuelCost + vehicleCosts + equipmentCosts + materialsCosts;
     const overheadCosts = (totalDirectCosts * overheadPercentage) / 100;
     const totalCost = totalDirectCosts + overheadCosts;
-    const profit = jobRevenue - totalCost;
-    const profitMargin = jobRevenue > 0 ? (profit / jobRevenue) * 100 : 0;
+    const profit = totalServicesRevenue - totalCost;
+    const profitMargin = totalServicesRevenue > 0 ? (profit / totalServicesRevenue) * 100 : 0;
     const breakEvenRevenue = totalCost;
 
     const totalHours = Object.values(hoursWorked).reduce((sum, hours) => sum + hours, 0);
     const costPerHour = totalHours > 0 ? totalCost / totalHours : 0;
-    const revenuePerHour = totalHours > 0 ? jobRevenue / totalHours : 0;
+    const revenuePerHour = totalHours > 0 ? totalServicesRevenue / totalHours : 0;
 
     return {
       laborCosts,
@@ -74,16 +85,18 @@ function App() {
       breakEvenRevenue,
       costPerHour,
       revenuePerHour,
-      totalHours
+      totalHours,
+      totalServicesRevenue
     };
-  }, [hoursWorked, fuelCost, vehicleCosts, equipmentCosts, materialsCosts, overheadPercentage, jobRevenue, employees]);
+  }, [hoursWorked, fuelCost, vehicleCosts, equipmentCosts, materialsCosts, overheadPercentage, additionalServices, employees]);
 
   const handleAnalyze = () => {
     setShowResults(true);
   };
 
-  const hasData = jobRevenue > 0 || Object.values(hoursWorked).some(hours => hours > 0) ||
-    fuelCost > 0 || vehicleCosts > 0 || equipmentCosts > 0 || materialsCosts > 0;
+  const hasData = Object.values(hoursWorked).some(hours => hours > 0) ||
+    fuelCost > 0 || vehicleCosts > 0 || equipmentCosts > 0 || materialsCosts > 0 ||
+    Object.values(additionalServices).some(service => service > 0);
 
   if (!isLoggedIn) {
     return <Login onLogin={() => setIsLoggedIn(true)} />;
@@ -93,6 +106,11 @@ function App() {
     <div className="min-h-screen py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-center text-indigo-700 mb-6">Swift & Gentle Job Cost Analyzer</h1>
+
+        <div className="mb-4">
+          <label className="block mb-1 text-sm font-medium">Customer Name</label>
+          <input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)} className="w-full px-4 py-2 border rounded-lg" placeholder="Enter customer name" />
+        </div>
 
         <JobInfoSection
           jobRevenue={jobRevenue}
@@ -108,6 +126,23 @@ function App() {
           onMaterialsCostsChange={setMaterialsCosts}
           onOverheadPercentageChange={setOverheadPercentage}
         />
+
+        <div className="mt-4">
+          <label className="block mb-1 text-sm font-medium">Additional Services (Packing, Storage, etc.)</label>
+          {['Packing', 'Storage', 'Junk Removal'].map(service => (
+            <div key={service} className="mb-2">
+              <label className="block text-sm">{service}</label>
+              <input
+                type="number"
+                min="0"
+                value={additionalServices[service] || 0}
+                onChange={e => handleServiceChange(service, parseFloat(e.target.value) || 0)}
+                className="w-full px-3 py-1 border rounded-lg"
+                placeholder={`Revenue from ${service}`}
+              />
+            </div>
+          ))}
+        </div>
 
         <div className="mt-8">
           <TeamHoursSection
@@ -130,8 +165,12 @@ function App() {
 
         {showResults && hasData && (
           <div className="mt-12 space-y-8">
+            <div className="text-center">
+              <h2 className="text-lg font-semibold">Customer: {customerName || 'N/A'}</h2>
+            </div>
+
             <ProfitAnalysis
-              jobRevenue={jobRevenue}
+              jobRevenue={calculations.totalServicesRevenue}
               totalCosts={calculations.totalCost}
               profit={calculations.profit}
               profitMargin={calculations.profitMargin}
@@ -152,7 +191,7 @@ function App() {
             />
 
             <SummarySection
-              jobRevenue={jobRevenue}
+              jobRevenue={calculations.totalServicesRevenue}
               fuelCost={fuelCost}
               vehicleCosts={vehicleCosts}
               equipmentCosts={equipmentCosts}
@@ -172,4 +211,3 @@ function App() {
 }
 
 export default App;
-
