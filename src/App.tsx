@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import Login from './login';
 import JobInfoSection from './components/JobInfoSection';
 import TeamHoursSection from './components/TeamHoursSection';
@@ -89,7 +90,7 @@ function App() {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-extrabold text-center text-indigo-700 mb-8 drop-shadow-sm">Swift & Gentle Job Cost Analyzer</h1>
 
-        <div className="bg-white rounded-2xl shadow-lg p-8">
+        <motion.div layout className="bg-white rounded-2xl shadow-lg p-8">
           <JobInfoSection
             jobRevenue={jobRevenue}
             fuelCost={fuelCost}
@@ -104,15 +105,15 @@ function App() {
             onMaterialsCostsChange={setMaterialsCosts}
             onOverheadPercentageChange={setOverheadPercentage}
           />
-        </div>
+        </motion.div>
 
-        <div className="mt-10 bg-white rounded-2xl shadow-lg p-8">
+        <motion.div layout className="mt-10 bg-white rounded-2xl shadow-lg p-8">
           <TeamHoursSection
             hoursWorked={hoursWorked}
             wages={employees}
             onHoursChange={handleHoursChange}
           />
-        </div>
+        </motion.div>
 
         {hasData && (
           <div className="mt-8 text-center">
@@ -125,50 +126,59 @@ function App() {
           </div>
         )}
 
-        {showResults && hasData && (
-          <div className="mt-12 space-y-10">
-            <div className="bg-white rounded-2xl shadow-md p-8">
-              <ProfitAnalysis
-                jobRevenue={jobRevenue}
-                totalCosts={calculations.totalCost}
-                profit={calculations.profit}
-                profitMargin={calculations.profitMargin}
-                breakEvenRevenue={calculations.breakEvenRevenue}
-                costPerHour={calculations.costPerHour}
-                totalHours={calculations.totalHours}
-                revenuePerHour={calculations.revenuePerHour}
-              />
-            </div>
+        <AnimatePresence>
+          {showResults && hasData && (
+            <motion.div
+              layout
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.4 }}
+              className="mt-12 space-y-10"
+            >
+              <div className="bg-white rounded-2xl shadow-md p-8">
+                <ProfitAnalysis
+                  jobRevenue={jobRevenue}
+                  totalCosts={calculations.totalCost}
+                  profit={calculations.profit}
+                  profitMargin={calculations.profitMargin}
+                  breakEvenRevenue={calculations.breakEvenRevenue}
+                  costPerHour={calculations.costPerHour}
+                  totalHours={calculations.totalHours}
+                  revenuePerHour={calculations.revenuePerHour}
+                />
+              </div>
 
-            <div className="bg-white rounded-2xl shadow-md p-8">
-              <CostChart
-                laborCosts={calculations.laborCosts}
-                fuelCost={fuelCost}
-                vehicleCosts={vehicleCosts}
-                equipmentCosts={equipmentCosts}
-                materialsCosts={materialsCosts}
-                overheadCosts={calculations.overheadCosts}
-                profit={calculations.profit}
-              />
-            </div>
+              <div className="bg-white rounded-2xl shadow-md p-8">
+                <CostChart
+                  laborCosts={calculations.laborCosts}
+                  fuelCost={fuelCost}
+                  vehicleCosts={vehicleCosts}
+                  equipmentCosts={equipmentCosts}
+                  materialsCosts={materialsCosts}
+                  overheadCosts={calculations.overheadCosts}
+                  profit={calculations.profit}
+                />
+              </div>
 
-            <div className="bg-white rounded-2xl shadow-md p-8">
-              <SummarySection
-                jobRevenue={jobRevenue}
-                fuelCost={fuelCost}
-                vehicleCosts={vehicleCosts}
-                equipmentCosts={equipmentCosts}
-                materialsCosts={materialsCosts}
-                overheadCosts={calculations.overheadCosts}
-                totalLaborCost={calculations.totalLaborCost}
-                totalCost={calculations.totalCost}
-                profit={calculations.profit}
-                laborCosts={calculations.laborCosts}
-                hoursWorked={hoursWorked}
-              />
-            </div>
-          </div>
-        )}
+              <div className="bg-white rounded-2xl shadow-md p-8">
+                <SummarySection
+                  jobRevenue={jobRevenue}
+                  fuelCost={fuelCost}
+                  vehicleCosts={vehicleCosts}
+                  equipmentCosts={equipmentCosts}
+                  materialsCosts={materialsCosts}
+                  overheadCosts={calculations.overheadCosts}
+                  totalLaborCost={calculations.totalLaborCost}
+                  totalCost={calculations.totalCost}
+                  profit={calculations.profit}
+                  laborCosts={calculations.laborCosts}
+                  hoursWorked={hoursWorked}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
