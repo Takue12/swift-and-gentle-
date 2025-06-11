@@ -5,7 +5,7 @@ import TeamHoursSection from './components/TeamHoursSection';
 import SummarySection from './components/SummarySection';
 import ProfitAnalysis from './components/ProfitAnalysis';
 import CostChart from './components/CostChart';
-import RevenueChart from './components/RevenueChart';
+import { FaChartBar, FaUsers, FaFileInvoiceDollar } from 'react-icons/fa';
 
 const DEFAULT_WAGES = {
   chino: 25,
@@ -34,6 +34,7 @@ function App() {
 
   const [customerName, setCustomerName] = useState<string>('');
   const [additionalServices, setAdditionalServices] = useState<Record<string, number>>({});
+  const [activeTab, setActiveTab] = useState<'job' | 'team' | 'results'>('job');
 
   useEffect(() => {
     const auth = localStorage.getItem('auth');
@@ -41,17 +42,11 @@ function App() {
   }, []);
 
   const handleHoursChange = (name: string, hours: number) => {
-    setHoursWorked(prev => ({
-      ...prev,
-      [name]: hours
-    }));
+    setHoursWorked(prev => ({ ...prev, [name]: hours }));
   };
 
   const handleServiceChange = (service: string, value: number) => {
-    setAdditionalServices(prev => ({
-      ...prev,
-      [service]: value
-    }));
+    setAdditionalServices(prev => ({ ...prev, [service]: value }));
   };
 
   const calculations = useMemo(() => {
@@ -93,125 +88,138 @@ function App() {
 
   const handleAnalyze = () => {
     setShowResults(true);
+    setActiveTab('results');
   };
 
-  const hasData = Object.values(hoursWorked).some(hours => hours > 0) ||
-    fuelCost > 0 || vehicleCosts > 0 || equipmentCosts > 0 || materialsCosts > 0 ||
-    Object.values(additionalServices).some(service => service > 0);
-
-  if (!isLoggedIn) {
-    return <Login onLogin={() => setIsLoggedIn(true)} />;
-  }
+  if (!isLoggedIn) return <Login onLogin={() => setIsLoggedIn(true)} />;
 
   return (
-    <div className="min-h-screen py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-center text-indigo-700 mb-6">Swift & Gentle Job Cost Analyzer</h1>
+    <div className="min-h-screen flex bg-gray-100">
+      <aside className="w-64 bg-white shadow-lg p-6">
+        <h2 className="text-2xl font-bold text-indigo-700 mb-8">Dashboard</h2>
+        <nav className="space-y-4">
+          <button onClick={() => setActiveTab('job')} className={`flex items-center gap-3 text-left px-3 py-2 rounded-lg w-full ${activeTab === 'job' ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'text-gray-600 hover:bg-gray-100'}`}>
+            <FaFileInvoiceDollar /> Job Info
+          </button>
+          <button onClick={() => setActiveTab('team')} className={`flex items-center gap-3 text-left px-3 py-2 rounded-lg w-full ${activeTab === 'team' ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'text-gray-600 hover:bg-gray-100'}`}>
+            <FaUsers /> Team Hours
+          </button>
+          <button onClick={() => setActiveTab('results')} className={`flex items-center gap-3 text-left px-3 py-2 rounded-lg w-full ${activeTab === 'results' ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'text-gray-600 hover:bg-gray-100'}`}>
+            <FaChartBar /> Results
+          </button>
+        </nav>
+      </aside>
 
-        <div className="mb-4">
-          <label className="block mb-1 text-sm font-medium">Customer Name</label>
-          <input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)} className="w-full px-4 py-2 border rounded-lg" placeholder="Enter customer name" />
-        </div>
+      <main className="flex-1 p-10">
+        <div className="max-w-5xl mx-auto">
+          <h1 className="text-4xl font-bold text-center text-indigo-800 mb-10">Swift & Gentle Job Cost Analyzer</h1>
 
-        <JobInfoSection
-          jobRevenue={jobRevenue}
-          fuelCost={fuelCost}
-          vehicleCosts={vehicleCosts}
-          equipmentCosts={equipmentCosts}
-          materialsCosts={materialsCosts}
-          overheadPercentage={overheadPercentage}
-          onJobRevenueChange={setJobRevenue}
-          onFuelCostChange={setFuelCost}
-          onVehicleCostsChange={setVehicleCosts}
-          onEquipmentCostsChange={setEquipmentCosts}
-          onMaterialsCostsChange={setMaterialsCosts}
-          onOverheadPercentageChange={setOverheadPercentage}
-        />
+          {activeTab === 'job' && (
+            <>
+              <div className="mb-6">
+                <label className="block mb-2 text-base font-semibold text-gray-700">Customer Name</label>
+                <input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Enter customer name" />
+              </div>
 
-        <div className="mt-4">
-          <label className="block mb-1 text-sm font-medium">Additional Services (Packing, Storage, etc.)</label>
-          {['Packing', 'Storage', 'Junk Removal'].map(service => (
-            <div key={service} className="mb-2">
-              <label className="block text-sm">{service}</label>
-              <input
-                type="number"
-                min="0"
-                value={additionalServices[service] || 0}
-                onChange={e => handleServiceChange(service, parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-1 border rounded-lg"
-                placeholder={`Revenue from ${service}`}
+              <JobInfoSection
+                jobRevenue={jobRevenue}
+                fuelCost={fuelCost}
+                vehicleCosts={vehicleCosts}
+                equipmentCosts={equipmentCosts}
+                materialsCosts={materialsCosts}
+                overheadPercentage={overheadPercentage}
+                onJobRevenueChange={setJobRevenue}
+                onFuelCostChange={setFuelCost}
+                onVehicleCostsChange={setVehicleCosts}
+                onEquipmentCostsChange={setEquipmentCosts}
+                onMaterialsCostsChange={setMaterialsCosts}
+                onOverheadPercentageChange={setOverheadPercentage}
+              />
+
+              <div className="mt-6">
+                <label className="block mb-2 text-base font-semibold text-gray-700">Additional Services</label>
+                {['Packing', 'Storage', 'Junk Removal'].map(service => (
+                  <div key={service} className="mb-4">
+                    <label className="block text-sm font-medium text-gray-600">{service}</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={additionalServices[service] || 0}
+                      onChange={e => handleServiceChange(service, parseFloat(e.target.value) || 0)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                      placeholder={`Revenue from ${service}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {activeTab === 'team' && (
+            <TeamHoursSection
+              hoursWorked={hoursWorked}
+              wages={employees}
+              onHoursChange={handleHoursChange}
+            />
+          )}
+
+          {activeTab === 'results' && showResults && (
+            <div className="space-y-10">
+              <div className="text-center">
+                <h2 className="text-xl font-semibold text-gray-700">Customer: {customerName || 'N/A'}</h2>
+              </div>
+
+              <ProfitAnalysis
+                jobRevenue={calculations.totalServicesRevenue}
+                totalCosts={calculations.totalCost}
+                profit={calculations.profit}
+                profitMargin={calculations.profitMargin}
+                breakEvenRevenue={calculations.breakEvenRevenue}
+                costPerHour={calculations.costPerHour}
+                totalHours={calculations.totalHours}
+                revenuePerHour={calculations.revenuePerHour}
+              />
+
+              <CostChart
+                laborCosts={calculations.laborCosts}
+                fuelCost={fuelCost}
+                vehicleCosts={vehicleCosts}
+                equipmentCosts={equipmentCosts}
+                materialsCosts={materialsCosts}
+                overheadCosts={calculations.overheadCosts}
+                profit={calculations.profit}
+              />
+
+              <SummarySection
+                jobRevenue={calculations.totalServicesRevenue}
+                fuelCost={fuelCost}
+                vehicleCosts={vehicleCosts}
+                equipmentCosts={equipmentCosts}
+                materialsCosts={materialsCosts}
+                overheadCosts={calculations.overheadCosts}
+                totalLaborCost={calculations.totalLaborCost}
+                totalCost={calculations.totalCost}
+                profit={calculations.profit}
+                laborCosts={calculations.laborCosts}
+                hoursWorked={hoursWorked}
               />
             </div>
-          ))}
-        </div>
+          )}
 
-        <div className="mt-8">
-          <TeamHoursSection
-            hoursWorked={hoursWorked}
-            wages={employees}
-            onHoursChange={handleHoursChange}
-          />
-        </div>
-
-        {hasData && (
-          <div className="mt-6 text-center">
-            <button
-              onClick={handleAnalyze}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
-            >
-              Analyze Job
-            </button>
-          </div>
-        )}
-
-        {showResults && hasData && (
-          <div className="mt-12 space-y-8">
-            <div className="text-center">
-              <h2 className="text-lg font-semibold">Customer: {customerName || 'N/A'}</h2>
+          {hasData && activeTab !== 'results' && (
+            <div className="mt-10 text-center">
+              <button
+                onClick={handleAnalyze}
+                className="bg-indigo-600 text-white px-8 py-3 rounded-xl text-lg font-semibold shadow-md hover:bg-indigo-700 transition"
+              >
+                Analyze Job
+              </button>
             </div>
-
-            <ProfitAnalysis
-              jobRevenue={calculations.totalServicesRevenue}
-              totalCosts={calculations.totalCost}
-              profit={calculations.profit}
-              profitMargin={calculations.profitMargin}
-              breakEvenRevenue={calculations.breakEvenRevenue}
-              costPerHour={calculations.costPerHour}
-              totalHours={calculations.totalHours}
-              revenuePerHour={calculations.revenuePerHour}
-            />
-
-            <RevenueChart additionalServices={additionalServices} />
-
-            <CostChart
-              laborCosts={calculations.laborCosts}
-              fuelCost={fuelCost}
-              vehicleCosts={vehicleCosts}
-              equipmentCosts={equipmentCosts}
-              materialsCosts={materialsCosts}
-              overheadCosts={calculations.overheadCosts}
-              profit={calculations.profit}
-            />
-
-            <SummarySection
-              jobRevenue={calculations.totalServicesRevenue}
-              fuelCost={fuelCost}
-              vehicleCosts={vehicleCosts}
-              equipmentCosts={equipmentCosts}
-              materialsCosts={materialsCosts}
-              overheadCosts={calculations.overheadCosts}
-              totalLaborCost={calculations.totalLaborCost}
-              totalCost={calculations.totalCost}
-              profit={calculations.profit}
-              laborCosts={calculations.laborCosts}
-              hoursWorked={hoursWorked}
-            />
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
 
 export default App;
-
