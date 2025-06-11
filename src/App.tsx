@@ -88,11 +88,12 @@ function App() {
 
   return (
     <div className="min-h-screen flex bg-gradient-to-tr from-green-100 via-white to-green-100">
-      <div className="w-64 bg-white shadow-lg border-r border-green-300 p-6 space-y-6">
+      <div className="w-64 bg-white shadow-lg border-green-300 p-6 space-y-6 rounded-3xl m-4">
         <h2 className="text-xl font-bold text-green-700 mb-4">Dashboard</h2>
-        <button className={`w-full text-left px-4 py-2 rounded border ${activeTab === 'job' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent'}`} onClick={() => setActiveTab('job')}>Job Info</button>
-        <button className={`w-full text-left px-4 py-2 rounded border ${activeTab === 'team' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent'}`} onClick={() => setActiveTab('team')}>Team Hours</button>
-        {showResults && <button className={`w-full text-left px-4 py-2 rounded border ${activeTab === 'results' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent'}`} onClick={() => setActiveTab('results')}>Results</button>}
+        <p className="text-sm text-green-600">Customer: <strong>{customerName || 'N/A'}</strong></p>
+        <button className={`w-full text-left px-4 py-2 rounded-full border ${activeTab === 'job' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent'}`} onClick={() => setActiveTab('job')}><span className="mr-2">📋</span>Job Info</button>
+        <button className={`w-full text-left px-4 py-2 rounded border ${activeTab === 'team' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent'}`} onClick={() => setActiveTab('team')}><span className="mr-2">👥</span>Team Hours</button>
+        {showResults && <button className={`w-full text-left px-4 py-2 rounded border ${activeTab === 'results' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent'}`} onClick={() => setActiveTab('results')}><span className="mr-2">📊</span>Results</button>}
       </div>
 
       <div className="flex-1 p-8">
