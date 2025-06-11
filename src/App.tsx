@@ -92,11 +92,10 @@ function App() {
       <div className="w-64 bg-white shadow-lg border-green-300 p-6 space-y-6 rounded-3xl m-4">
         <h2 className="text-xl font-bold text-green-700 mb-4">Dashboard</h2>
         
-        </div>
         <p className="text-sm text-green-600">Customer: <strong>{customerName || 'N/A'}</strong></p>
-        <button className={`w-full text-left px-4 py-2 rounded-full border ${activeTab === 'job' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent hover:bg-green-100 transition-all duration-200'}`} onClick={() => setActiveTab('job')}`}>Job Info</button>
-        <button className={`w-full text-left px-4 py-2 rounded-full border ${activeTab === 'team' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent hover:bg-green-100 transition-all duration-200'}`} onClick={() => setActiveTab('team')}`}>Team Hours</button>
-        {showResults && <button className={`w-full text-left px-4 py-2 rounded-full border ${activeTab === 'results' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent hover:bg-green-100 transition-all duration-200'}`} onClick={() => setActiveTab('results')}`}>Results</button>}
+        <button className={`w-full text-left px-4 py-2 rounded-full border ${activeTab === 'job' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent hover:bg-green-100 transition-all duration-200'}`} onClick={() => setActiveTab('job')}>Job Info</button>
+        <button className={`w-full text-left px-4 py-2 rounded-full border ${activeTab === 'team' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent hover:bg-green-100 transition-all duration-200'}`} onClick={() => setActiveTab('team')}>Team Hours</button>
+        {showResults && <button className={`w-full text-left px-4 py-2 rounded-full border ${activeTab === 'results' ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent hover:bg-green-100 transition-all duration-200'}`} onClick={() => setActiveTab('results')}>Results</button>}
       </div>
 
       <div className="flex-1 p-8">
@@ -200,3 +199,4 @@ function App() {
 }
 
 export default App;
+
