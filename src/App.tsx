@@ -5,6 +5,7 @@ import TeamHoursSection from './components/TeamHoursSection';
 import SummarySection from './components/SummarySection';
 import ProfitAnalysis from './components/ProfitAnalysis';
 import CostChart from './components/CostChart';
+import RevenueChart from './components/RevenueChart';
 
 const DEFAULT_WAGES = {
   chino: 25,
@@ -180,6 +181,8 @@ function App() {
               revenuePerHour={calculations.revenuePerHour}
             />
 
+            <RevenueChart additionalServices={additionalServices} />
+
             <CostChart
               laborCosts={calculations.laborCosts}
               fuelCost={fuelCost}
@@ -211,3 +214,4 @@ function App() {
 }
 
 export default App;
+
