@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Login from './login';
 import JobInfoSection from './components/JobInfoSection';
 import TeamHoursSection from './components/TeamHoursSection';
+import SummarySection from './components/SummarySection';
 import ProfitAnalysis from './components/ProfitAnalysis';
 import CostChart from './components/CostChart';
-import SummarySection from './components/SummarySection';
 
 const DEFAULT_WAGES = {
   chino: 25,
@@ -57,6 +57,8 @@ function App() {
     const totalCost = totalDirectCosts + overheadCosts;
     const profit = jobRevenue - totalCost;
     const profitMargin = jobRevenue > 0 ? (profit / jobRevenue) * 100 : 0;
+    const breakEvenRevenue = totalCost;
+
     const totalHours = Object.values(hoursWorked).reduce((sum, hours) => sum + hours, 0);
     const costPerHour = totalHours > 0 ? totalCost / totalHours : 0;
     const revenuePerHour = totalHours > 0 ? jobRevenue / totalHours : 0;
@@ -64,16 +66,24 @@ function App() {
     return {
       laborCosts,
       totalLaborCost,
+      totalDirectCosts,
       overheadCosts,
       totalCost,
       profit,
       profitMargin,
-      totalHours,
+      breakEvenRevenue,
       costPerHour,
       revenuePerHour,
-      breakEvenRevenue: totalCost
+      totalHours
     };
   }, [hoursWorked, fuelCost, vehicleCosts, equipmentCosts, materialsCosts, overheadPercentage, jobRevenue, employees]);
+
+  const handleAnalyze = () => {
+    setShowResults(true);
+  };
+
+  const hasData = jobRevenue > 0 || Object.values(hoursWorked).some(hours => hours > 0) ||
+    fuelCost > 0 || vehicleCosts > 0 || equipmentCosts > 0 || materialsCosts > 0;
 
   if (!isLoggedIn) {
     return <Login onLogin={() => setIsLoggedIn(true)} />;
@@ -81,10 +91,8 @@ function App() {
 
   return (
     <div className="min-h-screen py-8 px-4">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-6 text-indigo-700">
-          Swift & Gentle Job Cost Analyzer
-        </h1>
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-center text-indigo-700 mb-6">Swift & Gentle Job Cost Analyzer</h1>
 
         <JobInfoSection
           jobRevenue={jobRevenue}
@@ -109,58 +117,54 @@ function App() {
           />
         </div>
 
-        <div className="mt-8 text-center">
-          <button
-            onClick={() => setShowResults(true)}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-          >
-            Analyze Job
-          </button>
-        </div>
+        {hasData && (
+          <div className="mt-6 text-center">
+            <button
+              onClick={handleAnalyze}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+            >
+              Analyze Job
+            </button>
+          </div>
+        )}
 
-        {showResults && (
-          <>
-            <div className="mt-8">
-              <ProfitAnalysis
-                jobRevenue={jobRevenue}
-                totalCosts={calculations.totalCost}
-                profit={calculations.profit}
-                profitMargin={calculations.profitMargin}
-                breakEvenRevenue={calculations.breakEvenRevenue}
-                costPerHour={calculations.costPerHour}
-                totalHours={calculations.totalHours}
-                revenuePerHour={calculations.revenuePerHour}
-              />
-            </div>
+        {showResults && hasData && (
+          <div className="mt-12 space-y-8">
+            <ProfitAnalysis
+              jobRevenue={jobRevenue}
+              totalCosts={calculations.totalCost}
+              profit={calculations.profit}
+              profitMargin={calculations.profitMargin}
+              breakEvenRevenue={calculations.breakEvenRevenue}
+              costPerHour={calculations.costPerHour}
+              totalHours={calculations.totalHours}
+              revenuePerHour={calculations.revenuePerHour}
+            />
 
-            <div className="mt-8">
-              <CostChart
-                laborCosts={calculations.laborCosts}
-                fuelCost={fuelCost}
-                vehicleCosts={vehicleCosts}
-                equipmentCosts={equipmentCosts}
-                materialsCosts={materialsCosts}
-                overheadCosts={calculations.overheadCosts}
-                profit={calculations.profit}
-              />
-            </div>
+            <CostChart
+              laborCosts={calculations.laborCosts}
+              fuelCost={fuelCost}
+              vehicleCosts={vehicleCosts}
+              equipmentCosts={equipmentCosts}
+              materialsCosts={materialsCosts}
+              overheadCosts={calculations.overheadCosts}
+              profit={calculations.profit}
+            />
 
-            <div className="mt-8">
-              <SummarySection
-                jobRevenue={jobRevenue}
-                fuelCost={fuelCost}
-                vehicleCosts={vehicleCosts}
-                equipmentCosts={equipmentCosts}
-                materialsCosts={materialsCosts}
-                overheadCosts={calculations.overheadCosts}
-                totalLaborCost={calculations.totalLaborCost}
-                totalCost={calculations.totalCost}
-                profit={calculations.profit}
-                laborCosts={calculations.laborCosts}
-                hoursWorked={hoursWorked}
-              />
-            </div>
-          </>
+            <SummarySection
+              jobRevenue={jobRevenue}
+              fuelCost={fuelCost}
+              vehicleCosts={vehicleCosts}
+              equipmentCosts={equipmentCosts}
+              materialsCosts={materialsCosts}
+              overheadCosts={calculations.overheadCosts}
+              totalLaborCost={calculations.totalLaborCost}
+              totalCost={calculations.totalCost}
+              profit={calculations.profit}
+              laborCosts={calculations.laborCosts}
+              hoursWorked={hoursWorked}
+            />
+          </div>
         )}
       </div>
     </div>
