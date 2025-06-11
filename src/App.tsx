@@ -96,6 +96,10 @@ function App() {
     <div className="min-h-screen flex bg-gray-100">
       <aside className="w-64 bg-white p-6 shadow-xl">
         <h2 className="text-xl font-bold text-indigo-700 mb-6">Menu</h2>
+        <div className="mb-4 p-3 bg-indigo-50 rounded-lg text-center">
+          <div className="text-xs font-medium text-indigo-600">Current Job Revenue</div>
+          <div className="text-xl font-bold text-indigo-800">${calculations.totalServicesRevenue.toFixed(2)}</div>
+        </div>
         <nav className="space-y-4">
           <button onClick={() => setActiveTab('job')} className={`block w-full text-left px-4 py-2 rounded-lg ${activeTab === 'job' ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'hover:bg-gray-100 text-gray-700'}`}>
             Job Info
