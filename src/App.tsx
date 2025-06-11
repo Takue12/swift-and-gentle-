@@ -5,7 +5,7 @@ import TeamHoursSection from './components/TeamHoursSection';
 import SummarySection from './components/SummarySection';
 import ProfitAnalysis from './components/ProfitAnalysis';
 import CostChart from './components/CostChart';
-import { FaDollarSign, FaChartLine, FaTools } from 'react-icons/fa';
+import { FaDollarSign, FaChartLine, FaTools, FaSave, FaHistory } from 'react-icons/fa';
 
 const DEFAULT_WAGES = {
   chino: 25,
@@ -34,11 +34,14 @@ function App() {
 
   const [customerName, setCustomerName] = useState<string>('');
   const [additionalServices, setAdditionalServices] = useState<Record<string, number>>({});
-  const [activeTab, setActiveTab] = useState<'job' | 'team' | 'results'>('job');
+  const [activeTab, setActiveTab] = useState<'job' | 'team' | 'results' | 'history'>('job');
+  const [savedJobs, setSavedJobs] = useState<any[]>([]);
 
   useEffect(() => {
     const auth = localStorage.getItem('auth');
     if (auth === 'true') setIsLoggedIn(true);
+    const saved = localStorage.getItem('savedJobs');
+    if (saved) setSavedJobs(JSON.parse(saved));
   }, []);
 
   const handleHoursChange = (name: string, hours: number) => {
@@ -47,6 +50,20 @@ function App() {
 
   const handleServiceChange = (service: string, value: number) => {
     setAdditionalServices(prev => ({ ...prev, [service]: value }));
+  };
+
+  const handleSaveJob = () => {
+    const jobData = {
+      date: new Date().toLocaleString(),
+      customerName,
+      revenue: calculations.totalServicesRevenue,
+      profit: calculations.profit,
+      cost: calculations.totalCost
+    };
+    const updatedJobs = [...savedJobs, jobData];
+    setSavedJobs(updatedJobs);
+    localStorage.setItem('savedJobs', JSON.stringify(updatedJobs));
+    alert('Job saved successfully!');
   };
 
   const calculations = useMemo(() => {
@@ -122,6 +139,9 @@ function App() {
           <button onClick={() => setActiveTab('results')} className={`block w-full text-left px-4 py-2 rounded-lg ${activeTab === 'results' ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'hover:bg-gray-100 text-gray-700'}`}>
             Results
           </button>
+          <button onClick={() => setActiveTab('history')} className={`block w-full text-left px-4 py-2 rounded-lg ${activeTab === 'history' ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'hover:bg-gray-100 text-gray-700'}`}>
+            <FaHistory className="inline-block mr-2" /> History
+          </button>
         </nav>
       </aside>
 
@@ -129,7 +149,28 @@ function App() {
         <div className="max-w-5xl mx-auto">
           <h1 className="text-4xl font-bold text-center text-indigo-800 mb-10">Swift & Gentle Job Cost Analyzer</h1>
 
-          {/* Content Tabs */}
+          {activeTab === 'history' && (
+            <div>
+              <h2 className="text-2xl font-semibold mb-6">Saved Jobs</h2>
+              {savedJobs.length === 0 ? (
+                <p className="text-gray-500">No saved jobs yet.</p>
+              ) : (
+                <ul className="space-y-4">
+                  {savedJobs.map((job, idx) => (
+                    <li key={idx} className="border rounded-lg p-4 bg-white shadow">
+                      <div className="font-semibold text-indigo-700">{job.customerName}</div>
+                      <div className="text-sm text-gray-500">{job.date}</div>
+                      <div className="mt-2 text-sm">Revenue: ${job.revenue.toFixed(2)}</div>
+                      <div className="text-sm">Profit: ${job.profit.toFixed(2)}</div>
+                      <div className="text-sm">Cost: ${job.cost.toFixed(2)}</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {/* Original Tabs */}
           {activeTab === 'job' && (
             <>
               <div className="mb-6">
@@ -219,6 +260,15 @@ function App() {
                 laborCosts={calculations.laborCosts}
                 hoursWorked={hoursWorked}
               />
+
+              <div className="text-center">
+                <button
+                  onClick={handleSaveJob}
+                  className="mt-6 bg-green-600 text-white px-6 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-green-700"
+                >
+                  <FaSave /> Save This Job
+                </button>
+              </div>
             </div>
           )}
 
