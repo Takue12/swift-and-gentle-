@@ -114,3 +114,53 @@ export default function App() {
     </div>
   );
 }
+
+
+
+
+// --- NEW FEATURES ADDED IN PART 3 ---
+import { Line } from 'react-chartjs-2';
+
+// Forecast Data (dummy)
+const forecastData = {
+  labels: ['Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  datasets: [{
+    label: 'Forecasted Expenses',
+    data: [12000, 13500, 15000, 14800, 15200],
+    borderColor: '#0ea5e9',
+    backgroundColor: 'rgba(14,165,233,0.1)',
+    borderDash: [5, 5],
+    tension: 0.4,
+    fill: true,
+  }]
+};
+
+...
+
+{/* Forecast Section */}
+<div className="bg-white/60 backdrop-blur-md rounded-xl border border-cyan-300 p-6 mt-10 shadow-xl">
+  <h2 className="text-xl font-bold text-cyan-800 mb-4">📉 Forecasted Expenses (Next 5 Months)</h2>
+  <div className="h-80">
+    <Line 
+      data={forecastData}
+      options={{
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: false,
+            ticks: {
+              callback: value => '$' + value
+            }
+          }
+        }
+      }}
+    />
+  </div>
+</div>
+
+{/* Assistant Tip Box */}
+<div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white mt-10 p-5 rounded-xl shadow-lg animate-pulse">
+  <h3 className="text-lg font-semibold mb-2">💡 AI Insight</h3>
+  <p>Based on current trends, you may exceed the Materials budget by 12% in Q4. Consider reallocating funds from Marketing.</p>
+</div>
