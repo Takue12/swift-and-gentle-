@@ -7,7 +7,7 @@ import TeamHoursSection from './components/TeamHoursSection';
 import SummarySection from './components/SummarySection';
 import ProfitAnalysis from './components/ProfitAnalysis';
 import CostChart from './components/CostChart';
-import { Pie, Bar } from 'react-chartjs-2';
+import { Pie } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
@@ -107,20 +107,22 @@ function App() {
   if (!isLoggedIn) return <Login onLogin={() => setIsLoggedIn(true)} />;
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-tr from-green-50 via-white to-green-100">
-      <div className="w-64 bg-white shadow-xl border-green-200 p-6 space-y-6 rounded-3xl m-4">
-        <h2 className="text-xl font-bold text-green-700">Dashboard</h2>
+    <div className="min-h-screen flex bg-gradient-to-br from-black via-gray-900 to-black text-white">
+      <div className="w-64 bg-white/10 backdrop-blur-md shadow-xl border border-green-400 p-6 space-y-6 rounded-3xl m-4">
+        <h2 className="text-xl font-bold text-green-400">Dashboard</h2>
         {['job', 'team', 'results', 'budget'].map(tab => (
           (tab === 'results' && !showResults) ? null : (
-            <button key={tab} className={`w-full text-left px-4 py-2 rounded-full border ${activeTab === tab ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent hover:bg-green-100 transition-all'}`} onClick={() => setActiveTab(tab)}>
-              {tab.charAt(0).toUpperCase() + tab.slice(1)} {tab === 'job' ? 'Analyzer' : tab === 'team' ? 'Hours' : tab === 'results' ? 'Results' : 'Dashboard'}
+            <button key={tab} className={`w-full text-left px-4 py-2 rounded-full border ${activeTab === tab ? 'bg-green-500 text-white font-bold' : 'border-green-300 hover:bg-green-800 transition'}`} onClick={() => setActiveTab(tab)}>
+              {tab.toUpperCase()}
             </button>
           )
         ))}
       </div>
 
-      <div className="flex-1 p-8">
-        <h1 className="text-4xl font-extrabold text-center text-green-700 mb-6 drop-shadow">{activeTab === 'budget' ? 'Company Budget Dashboard' : 'Swift & Gentle Job Cost Analyzer'}</h1>
+      <div className="flex-1 p-8 space-y-10">
+        <h1 className="text-4xl font-extrabold text-center text-green-300 mb-6 drop-shadow-md tracking-wider">
+          {activeTab === 'budget' ? 'Budget Command Console' : 'Swift & Gentle Mission Control'}
+        </h1>
 
         {activeTab === 'job' && <JobInfoSection jobRevenue={jobRevenue} fuelCost={fuelCost} vehicleCosts={vehicleCosts} equipmentCosts={equipmentCosts} materialsCosts={materialsCosts} overheadPercentage={overheadPercentage} onJobRevenueChange={setJobRevenue} onFuelCostChange={setFuelCost} onVehicleCostsChange={setVehicleCosts} onEquipmentCostsChange={setEquipmentCosts} onMaterialsCostsChange={setMaterialsCosts} onOverheadPercentageChange={setOverheadPercentage} />}
         {activeTab === 'team' && <TeamHoursSection hoursWorked={hoursWorked} wages={employees} onHoursChange={handleHoursChange} />}
@@ -140,40 +142,40 @@ function App() {
                 if (newDept && !departmentDetails[newDept]) {
                   setDepartmentDetails(prev => ({ ...prev, [newDept]: { 'subcategory 1': 0 } }));
                 }
-              }} className="mt-6 px-6 py-3 bg-gradient-to-r from-green-400 via-teal-500 to-blue-500 text-white font-bold rounded-full shadow-xl hover:scale-105 transition-all duration-300">
+              }} className="px-6 py-3 bg-gradient-to-r from-green-400 to-blue-500 text-white font-bold rounded-full shadow-md hover:scale-105 transition">
                 + Add Department
               </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {Object.entries(departmentDetails).map(([dept, subs]) => (
-                <div key={dept} className="bg-white/80 backdrop-blur-md p-6 rounded-xl shadow-md border border-green-200">
-                  <h3 className="text-xl text-green-700 font-semibold capitalize mb-4 flex justify-between items-center">
+                <div key={dept} className="bg-white/10 backdrop-blur-xl p-6 rounded-xl shadow-lg border border-green-600">
+                  <h3 className="text-xl text-green-300 font-bold mb-4 flex justify-between items-center">
                     {dept}
                     <button onClick={() => {
                       const newSub = prompt(`New subcategory for ${dept}:`);
                       if (newSub) {
                         setDepartmentDetails(prev => ({ ...prev, [dept]: { ...prev[dept], [newSub]: 0 } }));
                       }
-                    }} className="text-xs bg-gradient-to-r from-cyan-500 to-green-400 px-3 py-1 rounded-full text-white shadow hover:scale-105 transition-all">
-                      + Add Subcategory
+                    }} className="text-xs bg-gradient-to-r from-green-500 to-teal-400 px-3 py-1 rounded-full text-white shadow hover:scale-105 transition">
+                      + Add
                     </button>
                   </h3>
                   {Object.entries(subs).map(([sub, val]) => (
                     <div key={sub} className="mb-3">
-                      <label className="block text-sm text-green-600 mb-1 capitalize">{sub}</label>
-                      <input type="number" className="w-full px-3 py-2 border border-green-300 rounded-md bg-white/60" value={val} onChange={(e) => handleSubChange(dept, sub, Number(e.target.value))} />
+                      <label className="block text-sm text-green-200 mb-1 capitalize">{sub}</label>
+                      <input type="number" className="w-full px-3 py-2 rounded-lg border border-green-300 bg-white/10 text-white" value={val} onChange={(e) => handleSubChange(dept, sub, Number(e.target.value))} />
                     </div>
                   ))}
-                  <p className="text-sm mt-3 text-right text-green-700 font-medium">
+                  <p className="text-sm text-right text-green-400 font-semibold">
                     Total: ${Object.values(subs).reduce((a, b) => a + b, 0).toLocaleString()}
                   </p>
                 </div>
               ))}
             </div>
 
-            <div className="bg-white rounded-xl shadow-md border border-green-200 p-8">
-              <h2 className="text-xl font-bold text-green-700 mb-4">Budget Distribution</h2>
+            <div className="bg-white/10 backdrop-blur-xl rounded-xl shadow-lg border border-green-400 p-8">
+              <h2 className="text-2xl font-bold text-green-300 mb-4">Budget Distribution</h2>
               <div className="h-96">
                 <Pie data={budgetChartData} options={{ responsive: true, maintainAspectRatio: false }} />
               </div>
@@ -183,7 +185,7 @@ function App() {
 
         {jobRevenue > 0 && activeTab !== 'results' && activeTab !== 'budget' && (
           <div className="mt-8 text-center">
-            <button onClick={handleAnalyze} className="bg-green-600 text-white px-8 py-3 rounded-xl text-lg font-semibold shadow hover:bg-green-700 transition">
+            <button onClick={handleAnalyze} className="bg-green-600 text-white px-8 py-3 rounded-xl text-lg font-bold shadow-lg hover:bg-green-500 transition">
               Analyze Job
             </button>
           </div>
