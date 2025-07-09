@@ -1,220 +1,116 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import Login from './login';
-import JobInfoSection from './components/JobInfoSection';
-import TeamHoursSection from './components/TeamHoursSection';
-import SummarySection from './components/SummarySection';
-import ProfitAnalysis from './components/ProfitAnalysis';
-import CostChart from './components/CostChart';
-import { Pie, Line } from 'react-chartjs-2';
+import { Line, Pie } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
-import { saveAs } from 'file-saver';
-
 Chart.register(...registerables);
 
-// Setup
+// Wages for default employees
 const DEFAULT_WAGES = {
   chino: 25, cosme: 25, chief: 25, daniel: 25,
   brendon: 13, chengetai: 13, matarutse: 13,
   rey: 20, intern: 13, sam: 15
 };
 
-const DEFAULT_DETAILS = {
-  labor: { crew: 6000, interns: 2000 },
-  marketing: { flyers: 1500, emailTools: 500 },
-  equipment: { trucks: 2500 },
-  operations: { insurance: 1000 }
+// Default department budgets and subcategories
+const DEFAULT_SUBCATEGORIES = {
+  labor: { crew: 6000, interns: 2700 },
+  marketing: { flyers: 1500, emailTools: 900, ads: 700 },
+  equipment: { trucks: 2500, tools: 1200 },
+  operations: { insurance: 1500, utilities: 1200 },
+  materials: { boxes: 2000, wrap: 800 }
 };
 
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [jobRevenue, setJobRevenue] = useState(0);
-  const [fuelCost, setFuelCost] = useState(0);
-  const [vehicleCosts, setVehicleCosts] = useState(0);
-  const [equipmentCosts, setEquipmentCosts] = useState(0);
-  const [materialsCosts, setMaterialsCosts] = useState(0);
-  const [overheadPercentage, setOverheadPercentage] = useState(15);
-  const [employees] = useState(DEFAULT_WAGES);
-  const [hoursWorked, setHoursWorked] = useState({});
-  const [showResults, setShowResults] = useState(false);
-  const [activeTab, setActiveTab] = useState('budget');
-  const [monthlyRevenue] = useState(50000);
-  const [departmentDetails, setDepartmentDetails] = useState(DEFAULT_DETAILS);
-  const [liveChartData, setLiveChartData] = useState([4500, 4800, 4700, 5100, 4950, 5200, 5350, 5000, 5500]);
+export default function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [activeTab, setActiveTab] = useState("budget");
+  const [subcategories, setSubcategories] = useState(DEFAULT_SUBCATEGORIES);
+  const [livePoints, setLivePoints] = useState<number[]>([0]);
 
-  // Auto update live graph every 3 sec
-  
-  useEffect(() => {
-    const storedBudgets = localStorage.getItem('departmentBudgets');
-    const storedSpending = localStorage.getItem('departmentSpending');
-    if (storedBudgets) setDepartmentBudgets(JSON.parse(storedBudgets));
-    if (storedSpending) setDepartmentSpending(JSON.parse(storedSpending));
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('departmentBudgets', JSON.stringify(departmentBudgets));
-    localStorage.setItem('departmentSpending', JSON.stringify(departmentSpending));
-  }, [departmentBudgets, departmentSpending]);
-
-  const exportToCSV = () => {
-    let csv = 'Department,Budget,Spent\n';
-    Object.keys(departmentBudgets).forEach(dept => {
-      csv += `${dept},${departmentBudgets[dept]},${departmentSpending[dept] || 0}\n`;
+  const totalPerDept = useMemo(() => {
+    const result: Record<string, number> = {};
+    Object.entries(subcategories).forEach(([dept, subs]) => {
+      result[dept] = Object.values(subs).reduce((a, b) => a + b, 0);
     });
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    saveAs(blob, 'budget_summary.csv');
-  };
+    return result;
+  }, [subcategories]);
 
+  useEffect(() => {
     const interval = setInterval(() => {
-      setLiveChartData(prev => [...prev.slice(1), Math.floor(4500 + Math.random() * 1200)]);
+      setLivePoints(prev => [...prev.slice(-20), Object.values(totalPerDept).reduce((a, b) => a + b, 0)]);
     }, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [totalPerDept]);
 
-  const departmentBudgets = useMemo(() => {
-    const totals = {};
-    for (const dept in departmentDetails) {
-      totals[dept] = Object.values(departmentDetails[dept]).reduce((a, b) => a + b, 0);
-    }
-    return totals;
-  }, [departmentDetails]);
-
-  useEffect(() => {
-    const auth = localStorage.getItem('auth');
-    if (auth === 'true') setIsLoggedIn(true);
-  }, []);
-
-  const handleSubChange = (dept, sub, value) => {
-    setDepartmentDetails(prev => ({
+  const handleSubChange = (dept: string, sub: string, value: number) => {
+    setSubcategories(prev => ({
       ...prev,
-      [dept]: {
-        ...prev[dept],
-        [sub]: value
-      }
+      [dept]: { ...prev[dept], [sub]: value }
     }));
   };
 
-  const lineData = {
-    labels: Array.from({ length: liveChartData.length }, (_, i) => `T-${liveChartData.length - i}`),
-    datasets: [{
-      label: 'Live Expense Tracking',
-      data: liveChartData,
-      borderColor: '#22d3ee',
-      backgroundColor: '#22d3ee44',
-      tension: 0.2,
-      pointRadius: 0,
-      fill: true
-    }]
-  };
-
-  const lineOptions = {
-    responsive: true,
-    plugins: {
-      legend: { display: false },
-    },
-    scales: {
-      y: {
-        ticks: {
-          color: '#22d3ee',
-          callback: (val) => `$${val}`
-        },
-        grid: { color: '#1e293b' }
-      },
-      x: {
-        ticks: { color: '#22d3ee' },
-        grid: { display: false }
-      }
-    }
-  };
-
   const pieData = {
-    labels: Object.keys(departmentBudgets),
+    labels: Object.keys(totalPerDept),
     datasets: [{
-      label: 'Budget Share',
-      data: Object.values(departmentBudgets),
-      backgroundColor: ['#22d3ee', '#34d399', '#818cf8', '#fbbf24', '#f87171']
+      data: Object.values(totalPerDept),
+      backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6']
     }]
   };
 
-  if (!isLoggedIn) return <Login onLogin={() => setIsLoggedIn(true)} />;
+  const lineData = {
+    labels: livePoints.map((_, i) => `T${i}`),
+    datasets: [{
+      label: 'Live Spending',
+      data: livePoints,
+      borderColor: '#10B981',
+      borderDash: [5, 5],
+      fill: false,
+      tension: 0.3
+    }]
+  };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white">
-      <div className="p-6 text-center text-3xl font-bold text-cyan-300 tracking-widest shadow-inner">
-        🚀 Swift & Gentle | FUTURE OPS
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-black via-slate-900 to-gray-800 text-white p-8 font-sans">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-4xl font-bold mb-8 text-center text-green-400">💹 Futuristic Budget Tracker</h1>
 
-      <div className="p-6">
-        <div className="text-center mb-8">
-          <button
-            onClick={() => {
-              const newDept = prompt('New department name:');
-              if (newDept && !departmentDetails[newDept]) {
-                setDepartmentDetails(prev => ({ ...prev, [newDept]: { 'subcategory 1': 0 } }));
-              }
-            }}
-            className="bg-gradient-to-r from-cyan-400 to-blue-600 hover:scale-105 transition px-6 py-3 rounded-full font-bold shadow-md"
-          >
-            + Add Department
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {Object.entries(departmentDetails).map(([dept, subs]) => (
-            <div key={dept} className="bg-white/10 backdrop-blur-lg p-6 rounded-xl border border-cyan-400 shadow-lg">
-              <h3 className="text-lg font-semibold text-cyan-300 flex justify-between items-center mb-4">
-                {dept}
-                <button
-                  onClick={() => {
-                    const sub = prompt(\`New subcategory for \${dept}:\`);
-                    if (sub) {
-                      setDepartmentDetails(prev => ({
-                        ...prev,
-                        [dept]: { ...prev[dept], [sub]: 0 }
-                      }));
-                    }
-                  }}
-                  className="bg-gradient-to-r from-green-400 to-teal-400 text-xs px-3 py-1 rounded-full shadow"
-                >
-                  + Add Sub
-                </button>
-              </h3>
-              {Object.entries(subs).map(([sub, val]) => (
-                <div key={sub} className="mb-3">
-                  <label className="block text-sm text-cyan-200 mb-1 capitalize">{sub}</label>
-                  <input
-                    type="number"
-                    value={val}
-                    onChange={(e) => handleSubChange(dept, sub, Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg border border-cyan-300 bg-black/20 text-white"
-                  />
-                </div>
-              ))}
-              <div className="text-right text-cyan-400 font-bold mt-2">
-                Total: ${Object.values(subs).reduce((a, b) => a + b, 0).toLocaleString()}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-white/10 backdrop-blur-md rounded-xl shadow-lg p-6 border border-cyan-400">
-            <h2 className="text-xl font-bold text-cyan-300 mb-4">Live Expense Chart</h2>
-            <div className="h-80">
-              <Line data={lineData} options={lineOptions} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="bg-slate-800 p-6 rounded-2xl shadow-xl border border-green-500">
+            <h2 className="text-xl mb-4 font-semibold text-green-300">Live Expense Tracking</h2>
+            <div className="h-72">
+              <Line data={lineData} options={{ responsive: true, maintainAspectRatio: false }} />
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md rounded-xl shadow-lg p-6 border border-cyan-400">
-            <h2 className="text-xl font-bold text-cyan-300 mb-4">Budget Distribution</h2>
-            <div className="h-80">
-              <Pie data={pieData} />
+          <div className="bg-slate-800 p-6 rounded-2xl shadow-xl border border-green-500">
+            <h2 className="text-xl mb-4 font-semibold text-green-300">Department Share (Pie)</h2>
+            <div className="h-72">
+              <Pie data={pieData} options={{ responsive: true, maintainAspectRatio: false }} />
             </div>
+          </div>
+        </div>
+
+        <div className="mt-10 bg-slate-900 p-6 rounded-xl border border-green-700 shadow-lg">
+          <h2 className="text-2xl font-semibold text-green-400 mb-6">🧩 Department Subcategories</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Object.entries(subcategories).map(([dept, subs]) => (
+              <div key={dept} className="bg-slate-800 rounded-xl p-4 border border-green-400">
+                <h3 className="text-lg font-semibold text-green-300 capitalize mb-3">{dept}</h3>
+                {Object.entries(subs).map(([sub, val]) => (
+                  <div key={sub} className="mb-3">
+                    <label className="block text-sm text-gray-300 mb-1">{sub}</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 rounded-md bg-gray-700 border border-green-500 text-white"
+                      value={val}
+                      onChange={e => handleSubChange(dept, sub, parseFloat(e.target.value))}
+                    />
+                  </div>
+                ))}
+              </div>
+            ))}
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-export default App;
