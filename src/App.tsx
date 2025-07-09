@@ -1,6 +1,4 @@
-
-// Combined Dashboard: Budget + Job Cost
-// Swift & Gentle Moving Dashboard
+// Swift & Gentle Combined Dashboard with consistent dark futuristic style
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
@@ -22,13 +20,13 @@ const DEFAULT_SUBCATEGORIES = {
 };
 
 function App() {
-  const [activeTab, setActiveTab] = useState("budget");
+  const [tab, setTab] = useState("budget");
 
-  // Budget State
+  // Budget
   const [subcategories, setSubcategories] = useState(DEFAULT_SUBCATEGORIES);
   const [livePoints, setLivePoints] = useState<number[]>([]);
 
-  // Job Cost State
+  // Job cost
   const [jobRevenue, setJobRevenue] = useState(10000);
   const [fuelCost, setFuelCost] = useState(500);
   const [vehicleCost, setVehicleCost] = useState(800);
@@ -38,15 +36,8 @@ function App() {
   const [hoursWorked, setHoursWorked] = useState({});
   const [wages] = useState(DEFAULT_WAGES);
 
-  const handleSubChange = (dept: string, sub: string, value: number) => {
-    setSubcategories(prev => ({
-      ...prev,
-      [dept]: { ...prev[dept], [sub]: value }
-    }));
-  };
-
   const totalPerDept = useMemo(() => {
-    const result: Record<string, number> = {};
+    const result = {};
     Object.entries(subcategories).forEach(([dept, subs]) => {
       result[dept] = Object.values(subs).reduce((a, b) => a + b, 0);
     });
@@ -60,18 +51,15 @@ function App() {
     return () => clearInterval(interval);
   }, [totalPerDept]);
 
-  const forecastGraphData = {
-    labels: Array.from({ length: livePoints.length }, (_, i) => `T+${i}`),
-    datasets: [{
-      label: 'Live Expense Tracker',
-      data: livePoints,
-      borderColor: '#0ea5e9',
-      borderDash: [8, 4],
-      fill: true,
-      backgroundColor: 'rgba(14,165,233,0.05)',
-      pointRadius: 2,
-      tension: 0.4
-    }]
+  const handleSubChange = (dept, sub, value) => {
+    setSubcategories(prev => ({
+      ...prev,
+      [dept]: { ...prev[dept], [sub]: value }
+    }));
+  };
+
+  const handleHoursChange = (name, value) => {
+    setHoursWorked(prev => ({ ...prev, [name]: Number(value) }));
   };
 
   const laborCosts = useMemo(() => {
@@ -89,16 +77,34 @@ function App() {
   const profit = jobRevenue - totalCost;
   const margin = jobRevenue > 0 ? (profit / jobRevenue) * 100 : 0;
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white p-6">
-      <h1 className="text-3xl font-extrabold text-center text-cyan-400 mb-6">🚀 Swift & Gentle Dashboard</h1>
+  const forecastGraphData = {
+    labels: Array.from({ length: livePoints.length }, (_, i) => `T+${i}`),
+    datasets: [{
+      label: 'Live Expense Tracker',
+      data: livePoints,
+      borderColor: '#0ea5e9',
+      borderDash: [8, 4],
+      fill: true,
+      backgroundColor: 'rgba(14,165,233,0.05)',
+      pointRadius: 2,
+      tension: 0.4
+    }]
+  };
 
-      <div className="flex justify-center mb-8">
-        <button className={`mx-2 px-4 py-2 rounded ${activeTab === 'budget' ? 'bg-cyan-600' : 'bg-gray-700'}`} onClick={() => setActiveTab('budget')}>📊 Budget Dashboard</button>
-        <button className={`mx-2 px-4 py-2 rounded ${activeTab === 'job' ? 'bg-cyan-600' : 'bg-gray-700'}`} onClick={() => setActiveTab('job')}>📦 Job Cost Dashboard</button>
+  return (
+    <div className="min-h-screen bg-black text-white p-6">
+      <h1 className="text-3xl font-extrabold text-center text-cyan-400 mb-6">Swift & Gentle Unified Dashboard</h1>
+
+      <div className="flex justify-center space-x-6 mb-10">
+        <button onClick={() => setTab("budget")} className={`px-6 py-2 rounded-full border ${tab === "budget" ? "bg-cyan-700 text-white" : "border-cyan-700 text-cyan-400"}`}>
+          Budget Dashboard
+        </button>
+        <button onClick={() => setTab("jobcost")} className={`px-6 py-2 rounded-full border ${tab === "jobcost" ? "bg-green-600 text-white" : "border-green-600 text-green-300"}`}>
+          Job Cost Dashboard
+        </button>
       </div>
 
-      {activeTab === "budget" && (
+      {tab === "budget" && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {Object.entries(subcategories).map(([dept, subs]) => (
@@ -120,36 +126,37 @@ function App() {
           </div>
 
           <div className="bg-gradient-to-br from-cyan-900 to-gray-900 mt-10 rounded-xl p-6 shadow-2xl">
-            <h2 className="text-2xl text-cyan-300 font-bold mb-4">📉 Live Forecast</h2>
+            <h2 className="text-2xl text-cyan-300 font-bold mb-4">📊 Live Forecast</h2>
             <div className="h-96">
-              <Line
-                data={forecastGraphData}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    tooltip: {
-                      callbacks: {
-                        label: function (context) {
-                          return `$${context.raw.toLocaleString()}`;
-                        }
+              <Line data={forecastGraphData} options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  tooltip: {
+                    callbacks: {
+                      label: function (context) {
+                        return `$${context.raw.toLocaleString()}`;
                       }
                     }
-                  },
-                  scales: {
-                    y: { ticks: { color: '#94a3b8' }},
-                    x: { ticks: { color: '#94a3b8' }}
                   }
-                }}
-              />
+                },
+                scales: {
+                  y: {
+                    ticks: { color: '#94a3b8' }
+                  },
+                  x: {
+                    ticks: { color: '#94a3b8' }
+                  }
+                }
+              }} />
             </div>
           </div>
         </>
       )}
 
-      {activeTab === "job" && (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+      {tab === "jobcost" && (
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-gray-800 p-5 rounded-xl shadow-lg">
               <h2 className="text-xl font-bold text-green-300 mb-4">Job Inputs</h2>
               <label>Revenue: <input type="number" value={jobRevenue} onChange={(e) => setJobRevenue(Number(e.target.value))} className="w-full bg-black border border-green-400 p-2 rounded text-white" /></label>
@@ -168,7 +175,7 @@ function App() {
                   <input
                     type="number"
                     value={hoursWorked[name] || ''}
-                    onChange={(e) => setHoursWorked(prev => ({ ...prev, [name]: Number(e.target.value) }))}
+                    onChange={(e) => handleHoursChange(name, e.target.value)}
                     className="w-full bg-black border border-green-500 p-2 rounded text-white"
                   />
                 </div>
@@ -186,10 +193,10 @@ function App() {
               Profit: ${profit.toLocaleString()} ({margin.toFixed(2)}%)
             </p>
           </div>
-        </>
+        </div>
       )}
     </div>
   );
 }
 
-export default Ap
+export default App;
