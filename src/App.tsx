@@ -1,17 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { FiPlus, FiTrash2, FiEdit, FiTrendingUp, FiBarChart2, FiDollarSign } from 'react-icons/fi';
-import { Pie, Bar, Line } from 'react-chartjs-2';
+import { FiPlus, FiTrash2, FiEdit, FiTrendingUp } from 'react-icons/fi';
+import { Pie, Bar } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
-import Login from './login';
-import JobInfoSection from './components/JobInfoSection';
-import TeamHoursSection from './components/TeamHoursSection';
-import SummarySection from './components/SummarySection';
-import ProfitAnalysis from './components/ProfitAnalysis';
-import CostChart from './components/CostChart';
-
 Chart.register(...registerables);
 
-// DEFAULT DATA
+// Default data
 const DEFAULT_WAGES = {
   chino: 25,
   cosme: 25,
@@ -25,46 +18,29 @@ const DEFAULT_WAGES = {
   sam: 15,
 };
 
-const DEFAULT_BUDGETS = {
+const DEFAULT_BUDGET_ITEMS = {
   marketing: [
-    { id: 1, name: 'Flyers', cost: 0, efficiency: 0, notes: '' },
-    { id: 2, name: 'Social Media Ads', cost: 0, efficiency: 0, notes: '' }
+    { id: 1, name: 'Flyers', cost: 500, efficiency: 65 },
+    { id: 2, name: 'Social Media', cost: 1200, efficiency: 80 }
   ],
   operations: [
-    { id: 1, name: 'Vehicle Maintenance', cost: 0, efficiency: 0, notes: '' },
-    { id: 2, name: 'Office Supplies', cost: 0, efficiency: 0, notes: '' }
+    { id: 1, name: 'Vehicle Maintenance', cost: 1500, efficiency: 45 },
+    { id: 2, name: 'Equipment', cost: 800, efficiency: 70 }
   ],
   materials: [
-    { id: 1, name: 'Construction Materials', cost: 0, efficiency: 0, notes: '' },
-    { id: 2, name: 'Safety Equipment', cost: 0, efficiency: 0, notes: '' }
+    { id: 1, name: 'Construction', cost: 3500, efficiency: 60 },
+    { id: 2, name: 'Safety Gear', cost: 600, efficiency: 85 }
   ],
   labor: [
-    { id: 1, name: 'Overtime Hours', cost: 0, efficiency: 0, notes: '' },
-    { id: 2, name: 'Training Programs', cost: 0, efficiency: 0, notes: '' }
+    { id: 1, name: 'Overtime', cost: 2000, efficiency: 50 },
+    { id: 2, name: 'Training', cost: 1200, efficiency: 75 }
   ]
 };
 
-// COLOR THEMES
-const JOB_THEME = {
-  primary: '#10B981',
-  secondary: '#3B82F6',
-  accent: '#F59E0B',
-  dark: '#0F172A',
-  light: '#F8FAFC'
-};
-
-const BUDGET_THEME = {
-  primary: '#00f2fe',
-  secondary: '#4facfe',
-  accent: '#00d4ff',
-  dark: '#0a1a2a',
-  light: '#e6f7ff'
-};
-
-function App() {
-  // Authentication state
+const App = () => {
+  // Authentication
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  
+
   // Job Analysis State
   const [customerName, setCustomerName] = useState('');
   const [jobRevenue, setJobRevenue] = useState(0);
@@ -74,22 +50,22 @@ function App() {
   const [materialsCosts, setMaterialsCosts] = useState(0);
   const [overheadPercentage, setOverheadPercentage] = useState(15);
   const [employees, setEmployees] = useState(DEFAULT_WAGES);
-  const [hoursWorked, setHoursWorked] = useState({});
+  const [hoursWorked, setHoursWorked] = useState<Record<string, number>>({});
   const [showResults, setShowResults] = useState(false);
-  
+
   // Budget Dashboard State
   const [activeTab, setActiveTab] = useState<'job' | 'team' | 'results' | 'budget'>('job');
-  const [budgetDepartments, setBudgetDepartments] = useState(DEFAULT_BUDGETS);
+  const [budgetItems, setBudgetItems] = useState(DEFAULT_BUDGET_ITEMS);
   const [newItemName, setNewItemName] = useState('');
-  const [editingItem, setEditingItem] = useState(null);
-  const [activeDepartment, setActiveDepartment] = useState('marketing');
+  const [editingItem, setEditingItem] = useState<number | null>(null);
+  const [activeDept, setActiveDept] = useState<keyof typeof DEFAULT_BUDGET_ITEMS>('marketing');
 
   useEffect(() => {
     const auth = localStorage.getItem('auth');
     if (auth === 'true') setIsLoggedIn(true);
   }, []);
 
-  // Job Cost Calculations
+  // Job Calculations
   const jobCalculations = useMemo(() => {
     const laborCosts: Record<string, number> = {};
     Object.entries(hoursWorked).forEach(([name, hours]) => {
@@ -126,18 +102,15 @@ function App() {
 
   // Budget Calculations
   const budgetCalculations = useMemo(() => {
-    const departmentTotals = Object.keys(budgetDepartments).reduce((acc, dept) => {
-      acc[dept] = budgetDepartments[dept].reduce((sum, item) => sum + (item.cost || 0), 0);
+    const departmentTotals = Object.entries(budgetItems).reduce((acc, [dept, items]) => {
+      acc[dept as keyof typeof DEFAULT_BUDGET_ITEMS] = items.reduce((sum, item) => sum + item.cost, 0);
       return acc;
-    }, {} as Record<string, number>);
+    }, {} as Record<keyof typeof DEFAULT_BUDGET_ITEMS, number>);
 
     const totalBudget = Object.values(departmentTotals).reduce((sum, cost) => sum + cost, 0);
 
-    return {
-      departmentTotals,
-      totalBudget
-    };
-  }, [budgetDepartments]);
+    return { departmentTotals, totalBudget };
+  }, [budgetItems]);
 
   // Handlers
   const handleHoursChange = (name: string, hours: number) => {
@@ -156,443 +129,373 @@ function App() {
       id: Date.now(),
       name: newItemName,
       cost: 0,
-      efficiency: 0,
-      notes: ''
+      efficiency: 0
     };
 
-    setBudgetDepartments(prev => ({
+    setBudgetItems(prev => ({
       ...prev,
-      [activeDepartment]: [...prev[activeDepartment], newItem]
+      [activeDept]: [...prev[activeDept], newItem]
     }));
     setNewItemName('');
   };
 
   const updateBudgetItem = (field: string, value: any, itemId: number) => {
-    setBudgetDepartments(prev => ({
+    setBudgetItems(prev => ({
       ...prev,
-      [activeDepartment]: prev[activeDepartment].map(item => 
+      [activeDept]: prev[activeDept].map(item => 
         item.id === itemId ? { ...item, [field]: value } : item
       )
     }));
   };
 
   const deleteBudgetItem = (itemId: number) => {
-    setBudgetDepartments(prev => ({
+    setBudgetItems(prev => ({
       ...prev,
-      [activeDepartment]: prev[activeDepartment].filter(item => item.id !== itemId)
+      [activeDept]: prev[activeDept].filter(item => item.id !== itemId)
     }));
   };
 
-  if (!isLoggedIn) return <Login onLogin={() => setIsLoggedIn(true)} />;
+  if (!isLoggedIn) return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white p-8 rounded-lg shadow-md w-96">
+        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+        <button 
+          onClick={() => {
+            localStorage.setItem('auth', 'true');
+            setIsLoggedIn(true);
+          }}
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+        >
+          Enter Dashboard
+        </button>
+      </div>
+    </div>
+  );
 
   const hasJobData = jobRevenue > 0 || Object.values(hoursWorked).some(hours => hours > 0) || 
                     fuelCost > 0 || vehicleCosts > 0 || equipmentCosts > 0 || materialsCosts > 0;
 
   // Budget Chart Data
   const budgetChartData = {
-    labels: Object.keys(budgetDepartments),
+    labels: Object.keys(budgetItems),
     datasets: [{
-      label: 'Total Spending',
-      data: Object.keys(budgetDepartments).map(dept => 
-        budgetCalculations.departmentTotals[dept]
-      ),
-      backgroundColor: [BUDGET_THEME.primary, BUDGET_THEME.secondary, BUDGET_THEME.accent, '#06d6a0']
+      label: 'Budget Allocation',
+      data: Object.values(budgetCalculations.departmentTotals),
+      backgroundColor: [
+        'rgba(54, 162, 235, 0.6)',
+        'rgba(255, 99, 132, 0.6)',
+        'rgba(75, 192, 192, 0.6)',
+        'rgba(153, 102, 255, 0.6)'
+      ]
     }]
   };
 
   return (
     <div className="min-h-screen flex bg-gray-50">
-      {/* Sidebar Navigation */}
-      <div className="w-64 bg-white shadow-lg border-r border-gray-200 p-6 space-y-6">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Dashboard</h2>
-        
-        <p className="text-sm text-gray-600">Customer: <strong>{customerName || 'N/A'}</strong></p>
-        
-        <button 
-          className={`w-full text-left px-4 py-2 rounded-lg ${activeTab === 'job' ? 'bg-green-100 text-green-800 border-l-4 border-green-500 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
-          onClick={() => setActiveTab('job')}
-        >
-          Job Analyzer
-        </button>
-        
-        <button 
-          className={`w-full text-left px-4 py-2 rounded-lg ${activeTab === 'team' ? 'bg-green-100 text-green-800 border-l-4 border-green-500 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
-          onClick={() => setActiveTab('team')}
-        >
-          Team Hours
-        </button>
-        
-        {showResults && (
-          <button 
-            className={`w-full text-left px-4 py-2 rounded-lg ${activeTab === 'results' ? 'bg-green-100 text-green-800 border-l-4 border-green-500 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
-            onClick={() => setActiveTab('results')}
+      {/* Sidebar */}
+      <div className="w-64 bg-white shadow-md p-4">
+        <h2 className="text-xl font-bold mb-6">Dashboard</h2>
+        <div className="space-y-2">
+          <button
+            onClick={() => setActiveTab('job')}
+            className={`w-full text-left p-2 rounded ${activeTab === 'job' ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
           >
-            Job Results
+            Job Analysis
           </button>
-        )}
-        
-        <button 
-          className={`w-full text-left px-4 py-2 rounded-lg ${activeTab === 'budget' ? 'bg-blue-100 text-blue-800 border-l-4 border-blue-500 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
-          onClick={() => setActiveTab('budget')}
-        >
-          Budget Dashboard
-        </button>
+          <button
+            onClick={() => setActiveTab('team')}
+            className={`w-full text-left p-2 rounded ${activeTab === 'team' ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+          >
+            Team Hours
+          </button>
+          {showResults && (
+            <button
+              onClick={() => setActiveTab('results')}
+              className={`w-full text-left p-2 rounded ${activeTab === 'results' ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+            >
+              Job Results
+            </button>
+          )}
+          <button
+            onClick={() => setActiveTab('budget')}
+            className={`w-full text-left p-2 rounded ${activeTab === 'budget' ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+          >
+            Budget Dashboard
+          </button>
+        </div>
       </div>
 
-      {/* Main Content Area */}
+      {/* Main Content */}
       <div className="flex-1 p-8 overflow-auto">
         {activeTab !== 'budget' ? (
           <>
-            <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
-              Swift & Gentle Job Cost Analyzer
-            </h1>
-
-            <div className="mb-6">
-              <label className="block mb-2 text-gray-700 font-medium">Customer Name</label>
-              <input
-                type="text"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
-                placeholder="Enter customer name"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-              />
-            </div>
-
+            <h1 className="text-3xl font-bold mb-6">Job Cost Analysis</h1>
+            
             {activeTab === 'job' && (
-              <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8 mb-6">
-                <JobInfoSection
-                  jobRevenue={jobRevenue}
-                  fuelCost={fuelCost}
-                  vehicleCosts={vehicleCosts}
-                  equipmentCosts={equipmentCosts}
-                  materialsCosts={materialsCosts}
-                  overheadPercentage={overheadPercentage}
-                  onJobRevenueChange={setJobRevenue}
-                  onFuelCostChange={setFuelCost}
-                  onVehicleCostsChange={setVehicleCosts}
-                  onEquipmentCostsChange={setEquipmentCosts}
-                  onMaterialsCostsChange={setMaterialsCosts}
-                  onOverheadPercentageChange={setOverheadPercentage}
-                />
+              <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div className="mb-4">
+                  <label className="block mb-2">Customer Name</label>
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block mb-2">Job Revenue ($)</label>
+                    <input
+                      type="number"
+                      value={jobRevenue}
+                      onChange={(e) => setJobRevenue(Number(e.target.value))}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-2">Fuel Cost ($)</label>
+                    <input
+                      type="number"
+                      value={fuelCost}
+                      onChange={(e) => setFuelCost(Number(e.target.value))}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+                </div>
               </div>
             )}
 
             {activeTab === 'team' && (
-              <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8 mb-6">
-                <TeamHoursSection
-                  hoursWorked={hoursWorked}
-                  wages={employees}
-                  onHoursChange={handleHoursChange}
-                />
+              <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 className="text-xl font-bold mb-4">Team Hours</h2>
+                {Object.entries(employees).map(([name, wage]) => (
+                  <div key={name} className="flex items-center mb-3">
+                    <span className="w-32 capitalize">{name}</span>
+                    <input
+                      type="number"
+                      value={hoursWorked[name] || 0}
+                      onChange={(e) => handleHoursChange(name, Number(e.target.value))}
+                      className="w-20 p-2 border rounded"
+                    />
+                    <span className="ml-2">hours @ ${wage}/hr</span>
+                  </div>
+                ))}
               </div>
             )}
 
             {activeTab === 'results' && showResults && (
               <div className="space-y-6">
-                <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8">
-                  <ProfitAnalysis
-                    jobRevenue={jobRevenue}
-                    totalCosts={jobCalculations.totalCost}
-                    profit={jobCalculations.profit}
-                    profitMargin={jobCalculations.profitMargin}
-                    breakEvenRevenue={jobCalculations.breakEvenRevenue}
-                    costPerHour={jobCalculations.costPerHour}
-                    totalHours={jobCalculations.totalHours}
-                    revenuePerHour={jobCalculations.revenuePerHour}
-                  />
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h2 className="text-xl font-bold mb-4">Profit Analysis</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-gray-100 p-4 rounded">
+                      <h3 className="font-semibold">Total Revenue</h3>
+                      <p className="text-2xl">${jobRevenue.toLocaleString()}</p>
+                    </div>
+                    <div className="bg-gray-100 p-4 rounded">
+                      <h3 className="font-semibold">Total Cost</h3>
+                      <p className="text-2xl">${jobCalculations.totalCost.toLocaleString()}</p>
+                    </div>
+                    <div className={`p-4 rounded ${
+                      jobCalculations.profit >= 0 ? 'bg-green-100' : 'bg-red-100'
+                    }`}>
+                      <h3 className="font-semibold">Profit</h3>
+                      <p className="text-2xl">${jobCalculations.profit.toLocaleString()}</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8">
-                  <CostChart
-                    laborCosts={jobCalculations.laborCosts}
-                    fuelCost={fuelCost}
-                    vehicleCosts={vehicleCosts}
-                    equipmentCosts={equipmentCosts}
-                    materialsCosts={materialsCosts}
-                    overheadCosts={jobCalculations.overheadCosts}
-                    profit={jobCalculations.profit}
-                  />
-                </div>
-                <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8">
-                  <SummarySection
-                    jobRevenue={jobRevenue}
-                    fuelCost={fuelCost}
-                    vehicleCosts={vehicleCosts}
-                    equipmentCosts={equipmentCosts}
-                    materialsCosts={materialsCosts}
-                    overheadCosts={jobCalculations.overheadCosts}
-                    totalLaborCost={jobCalculations.totalLaborCost}
-                    totalCost={jobCalculations.totalCost}
-                    profit={jobCalculations.profit}
-                    laborCosts={jobCalculations.laborCosts}
-                    hoursWorked={hoursWorked}
-                  />
+
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h2 className="text-xl font-bold mb-4">Cost Breakdown</h2>
+                  <div className="h-64">
+                    <Pie
+                      data={{
+                        labels: ['Labor', 'Fuel', 'Vehicle', 'Equipment', 'Materials', 'Overhead'],
+                        datasets: [{
+                          data: [
+                            jobCalculations.totalLaborCost,
+                            fuelCost,
+                            vehicleCosts,
+                            equipmentCosts,
+                            materialsCosts,
+                            jobCalculations.overheadCosts
+                          ],
+                          backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', 
+                            '#4BC0C0', '#9966FF', '#FF9F40'
+                          ]
+                        }]
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             )}
 
             {hasJobData && activeTab !== 'results' && (
-              <div className="mt-6 text-center">
-                <button
-                  onClick={handleAnalyze}
-                  className="bg-green-600 text-white px-8 py-3 rounded-xl text-lg font-semibold shadow hover:bg-green-700 transition"
-                >
-                  Analyze Job
-                </button>
-              </div>
+              <button
+                onClick={handleAnalyze}
+                className="mt-4 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+              >
+                Analyze Job
+              </button>
             )}
           </>
         ) : (
           <>
-            <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
-              Company Budget Dashboard
-            </h1>
-
-            {/* Department Selector Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-              {Object.keys(budgetDepartments).map(dept => (
-                <div 
+            <h1 className="text-3xl font-bold mb-6">Budget Dashboard</h1>
+            
+            {/* Department Selector */}
+            <div className="flex space-x-2 mb-6">
+              {(Object.keys(budgetItems) as Array<keyof typeof budgetItems>).map(dept => (
+                <button
                   key={dept}
-                  onClick={() => setActiveDepartment(dept)}
-                  className={`p-4 rounded-lg cursor-pointer transition-all border-2 ${
-                    activeDepartment === dept 
-                      ? 'border-blue-500 bg-blue-50 shadow-md'
-                      : 'border-gray-200 hover:border-blue-300'
+                  onClick={() => setActiveDept(dept)}
+                  className={`px-4 py-2 rounded capitalize ${
+                    activeDept === dept 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-200 hover:bg-gray-300'
                   }`}
                 >
-                  <h3 className="font-semibold capitalize text-gray-800">{dept}</h3>
-                  <p className="text-2xl font-bold text-blue-600">
-                    ${budgetCalculations.departmentTotals[dept]?.toLocaleString() || 0}
-                  </p>
-                </div>
+                  {dept}
+                </button>
               ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Department Items Section */}
-              <div className="lg:col-span-2 space-y-6">
-                <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold capitalize text-gray-800">
-                      {activeDepartment} Items
-                    </h2>
-                    <div className="flex space-x-2">
-                      <input
-                        type="text"
-                        value={newItemName}
-                        onChange={(e) => setNewItemName(e.target.value)}
-                        placeholder="Add new item..."
-                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-                      />
-                      <button 
-                        onClick={addBudgetItem}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md flex items-center hover:bg-blue-700"
-                      >
-                        <FiPlus className="mr-1" /> Add
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="pb-2 text-left text-gray-700">Item</th>
-                          <th className="pb-2 text-right text-gray-700">Cost</th>
-                          <th className="pb-2 text-right text-gray-700">Efficiency</th>
-                          <th className="pb-2 text-right text-gray-700">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {budgetDepartments[activeDepartment].map(item => (
-                          <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
-                            <td className="py-3">
-                              {editingItem === item.id ? (
-                                <input
-                                  type="text"
-                                  value={item.name}
-                                  onChange={(e) => updateBudgetItem('name', e.target.value, item.id)}
-                                  className="w-full px-2 py-1 border border-gray-300 rounded"
-                                />
-                              ) : (
-                                <div className="font-medium text-gray-800">{item.name}</div>
-                              )}
-                            </td>
-                            <td className="text-right">
-                              {editingItem === item.id ? (
-                                <input
-                                  type="number"
-                                  value={item.cost}
-                                  onChange={(e) => updateBudgetItem('cost', Number(e.target.value), item.id)}
-                                  className="w-24 px-2 py-1 border border-gray-300 rounded text-right"
-                                />
-                              ) : (
-                                `$${item.cost.toLocaleString()}`
-                              )}
-                            </td>
-                            <td className="text-right">
-                              {editingItem === item.id ? (
-                                <input
-                                  type="number"
-                                  value={item.efficiency}
-                                  onChange={(e) => updateBudgetItem('efficiency', Number(e.target.value), item.id)}
-                                  className="w-24 px-2 py-1 border border-gray-300 rounded text-right"
-                                />
-                              ) : (
-                                <div className="flex items-center justify-end">
-                                  <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                                    <div 
-                                      className="h-2 rounded-full" 
-                                      style={{
-                                        width: `${Math.min(100, item.efficiency)}%`,
-                                        backgroundColor: 
-                                          item.efficiency > 70 ? '#10B981' :
-                                          item.efficiency > 40 ? '#3B82F6' : '#EF4444'
-                                      }}
-                                    ></div>
-                                  </div>
-                                  {item.efficiency}%
-                                </div>
-                              )}
-                            </td>
-                            <td className="text-right">
-                              <div className="flex justify-end space-x-2">
-                                {editingItem === item.id ? (
-                                  <button 
-                                    onClick={() => setEditingItem(null)}
-                                    className="p-1 text-green-600 hover:text-green-800"
-                                  >
-                                    Save
-                                  </button>
-                                ) : (
-                                  <>
-                                    <button 
-                                      onClick={() => setEditingItem(item.id)}
-                                      className="p-1 text-blue-600 hover:text-blue-800"
-                                    >
-                                      <FiEdit />
-                                    </button>
-                                    <button 
-                                      onClick={() => deleteBudgetItem(item.id)}
-                                      className="p-1 text-red-600 hover:text-red-800"
-                                    >
-                                      <FiTrash2 />
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Department Items */}
+              <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold capitalize">{activeDept} Budget</h2>
+                  <div className="flex">
+                    <input
+                      type="text"
+                      value={newItemName}
+                      onChange={(e) => setNewItemName(e.target.value)}
+                      placeholder="New item name"
+                      className="p-2 border rounded-l"
+                    />
+                    <button
+                      onClick={addBudgetItem}
+                      className="bg-blue-600 text-white p-2 rounded-r"
+                    >
+                      <FiPlus />
+                    </button>
                   </div>
                 </div>
 
-                {/* Department Efficiency Tools */}
-                <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-                  <h2 className="text-xl font-bold text-gray-800 mb-4">Efficiency Tools</h2>
-                  
-                  {activeDepartment === 'marketing' && (
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-blue-600">Marketing Optimization</h3>
-                      <ul className="space-y-2">
-                        <li className="flex items-center">
-                          <input type="checkbox" className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600" />
-                          <span>Automate social media posting</span>
-                        </li>
-                        <li className="flex items-center">
-                          <input type="checkbox" className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600" />
-                          <span>Implement email marketing funnel</span>
-                        </li>
-                        <li className="flex items-center">
-                          <input type="checkbox" className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600" />
-                          <span>Use AI-generated ad copy</span>
-                        </li>
-                      </ul>
-                    </div>
-                  )}
-
-                  {activeDepartment === 'operations' && (
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-blue-600">Operations Optimization</h3>
-                      <ul className="space-y-2">
-                        <li className="flex items-center">
-                          <input type="checkbox" className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600" />
-                          <span>Implement fleet tracking system</span>
-                        </li>
-                        <li className="flex items-center">
-                          <input type="checkbox" className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600" />
-                          <span>Digitize paperwork with mobile forms</span>
-                        </li>
-                        <li className="flex items-center">
-                          <input type="checkbox" className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600" />
-                          <span>Schedule predictive maintenance</span>
-                        </li>
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Similar sections for other departments */}
-                </div>
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left pb-2">Item</th>
+                      <th className="text-right pb-2">Cost</th>
+                      <th className="text-right pb-2">Efficiency</th>
+                      <th className="text-right pb-2">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {budgetItems[activeDept].map(item => (
+                      <tr key={item.id} className="border-b">
+                        <td className="py-3">
+                          {editingItem === item.id ? (
+                            <input
+                              type="text"
+                              value={item.name}
+                              onChange={(e) => updateBudgetItem('name', e.target.value, item.id)}
+                              className="w-full p-1 border"
+                            />
+                          ) : (
+                            item.name
+                          )}
+                        </td>
+                        <td className="text-right">
+                          {editingItem === item.id ? (
+                            <input
+                              type="number"
+                              value={item.cost}
+                              onChange={(e) => updateBudgetItem('cost', Number(e.target.value), item.id)}
+                              className="w-24 p-1 border text-right"
+                            />
+                          ) : (
+                            `$${item.cost.toLocaleString()}`
+                          )}
+                        </td>
+                        <td className="text-right">
+                          {editingItem === item.id ? (
+                            <input
+                              type="number"
+                              value={item.efficiency}
+                              onChange={(e) => updateBudgetItem('efficiency', Number(e.target.value), item.id)}
+                              className="w-24 p-1 border text-right"
+                            />
+                          ) : (
+                            `${item.efficiency}%`
+                          )}
+                        </td>
+                        <td className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            {editingItem === item.id ? (
+                              <button
+                                onClick={() => setEditingItem(null)}
+                                className="text-green-600"
+                              >
+                                Save
+                              </button>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => setEditingItem(item.id)}
+                                  className="text-blue-600"
+                                >
+                                  <FiEdit />
+                                </button>
+                                <button
+                                  onClick={() => deleteBudgetItem(item.id)}
+                                  className="text-red-600"
+                                >
+                                  <FiTrash2 />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
 
-              {/* Analytics Sidebar */}
+              {/* Budget Analytics */}
               <div className="space-y-6">
-                {/* Department Spending Chart */}
-                <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-                  <h2 className="text-xl font-bold text-gray-800 mb-4">Department Spending</h2>
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h2 className="text-xl font-bold mb-4">Budget Allocation</h2>
                   <div className="h-64">
                     <Bar
                       data={budgetChartData}
                       options={{
                         responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                          legend: { display: false },
-                          tooltip: {
-                            callbacks: {
-                              label: (context) => 
-                                `$${context.raw.toLocaleString()}`
-                            }
-                          }
-                        },
-                        scales: {
-                          y: {
-                            beginAtZero: true,
-                            ticks: {
-                              callback: (value) => `$${value}`
-                            }
-                          }
-                        }
+                        maintainAspectRatio: false
                       }}
                     />
                   </div>
                 </div>
 
-                {/* Recommendations */}
-                <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-                  <h2 className="text-xl font-bold text-gray-800 mb-4">Recommendations</h2>
-                  <div className="space-y-3">
-                    {activeDepartment === 'marketing' && (
-                      <>
-                        <div className="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                          <h4 className="font-semibold text-blue-700">Ad Performance</h4>
-                          <p className="text-sm text-gray-700">
-                            Consider increasing budget for high-performing channels by 15-20%.
-                          </p>
-                        </div>
-                      </>
-                    )}
-                    {activeDepartment === 'operations' && (
-                      <>
-                        <div className="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                          <h4 className="font-semibold text-blue-700">Fleet Maintenance</h4>
-                          <p className="text-sm text-gray-700">
-                            Vehicle #3 shows higher maintenance costs. Schedule diagnostic check.
-                          </p>
-                        </div>
-                      </>
-                    )}
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h2 className="text-xl font-bold mb-4">Department Totals</h2>
+                  <div className="space-y-2">
+                    {(Object.keys(budgetItems) as Array<keyof typeof budgetItems>).map(dept => (
+                      <div key={dept} className="flex justify-between">
+                        <span className="capitalize">{dept}</span>
+                        <span>${budgetCalculations.departmentTotals[dept].toLocaleString()}</span>
+                      </div>
+                    ))}
+                    <div className="border-t pt-2 font-bold">
+                      <div className="flex justify-between">
+                        <span>Total Budget</span>
+                        <span>${budgetCalculations.totalBudget.toLocaleString()}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -602,6 +505,8 @@ function App() {
       </div>
     </div>
   );
-}
+};
+
+export default App;
 
 export default App;
