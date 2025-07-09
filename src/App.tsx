@@ -1,5 +1,4 @@
 
-
 import React, { useState, useMemo, useEffect } from 'react';
 import Login from './login';
 import JobInfoSection from './components/JobInfoSection';
@@ -7,7 +6,7 @@ import TeamHoursSection from './components/TeamHoursSection';
 import SummarySection from './components/SummarySection';
 import ProfitAnalysis from './components/ProfitAnalysis';
 import CostChart from './components/CostChart';
-import { Pie } from 'react-chartjs-2';
+import { Pie, Line } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
@@ -176,7 +175,7 @@ function App() {
 
             <div className="bg-white/10 backdrop-blur-xl rounded-xl shadow-lg border border-green-400 p-8">
               <h2 className="text-2xl font-bold text-green-300 mb-4">Budget Distribution</h2>
-              <div className="h-96">
+              <div className="h-96 mb-12"><Line data={jaggedLineChartData} options={jaggedLineOptions} /></div><div className="h-96">
                 <Pie data={budgetChartData} options={{ responsive: true, maintainAspectRatio: false }} />
               </div>
             </div>
