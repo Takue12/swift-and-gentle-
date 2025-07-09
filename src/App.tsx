@@ -1,194 +1,171 @@
-import React, { useState } from 'react';
-import { Line, Pie } from 'react-chartjs-2';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Line, Bar } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
-const Dashboard = () => {
-  // Budget Tracker Data
-  const [budget, setBudget] = useState({
-    labor: 5000,
-    crew: 1500,
-    emailTools: 300,
-    ads: 700
-  });
+type Customer = {
+  id: string;
+  name: string;
+  contact: string;
+  jobHistory: Array<{ jobId: string; date: string; revenue: number; profit: number }>;
+};
 
-  // Team Hours Data
-  const [teamHours, setTeamHours] = useState([
-    { name: 'Chino', hours: 120, rate: 25 },
-    { name: 'Cosme', hours: 118, rate: 25 },
-    { name: 'Chief', hours: 110, rate: 25 },
-    { name: 'Daniel', hours: 105, rate: 25 },
-    { name: 'Brendon', hours: 35, rate: 13 },
-    { name: 'Chengetai', hours: 80, rate: 13 },
-    { name: 'Matarutse', hours: 85, rate: 13 },
-    { name: 'Rey', hours: 80, rate: 20 },
-    { name: 'Intern', hours: 75, rate: 13 },
-    { name: 'Sam', hours: 70, rate: 15 }
+const EnhancedJobCostDashboard = () => {
+  const [jobRevenue, setJobRevenue] = useState(50000);
+  const [fuelCost, setFuelCost] = useState(1200);
+  const [vehicleCosts, setVehicleCosts] = useState(2500);
+  const [equipmentCosts, setEquipmentCosts] = useState(1800);
+  const [materialsCosts, setMaterialsCosts] = useState(2200);
+  const [overheadPercentage, setOverheadPercentage] = useState(15);
+  const [livePoints, setLivePoints] = useState<number[]>([]);
+  const [aiInsights, setAIInsights] = useState<string[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([
+    {
+      id: '1',
+      name: 'Bob & Carol',
+      contact: 'bobcarol@example.com',
+      jobHistory: [
+        { jobId: 'J1', date: '2025-07-01', revenue: 10000, profit: 2500 },
+        { jobId: 'J2', date: '2025-07-06', revenue: 15000, profit: 3000 }
+      ]
+    },
+    {
+      id: '2',
+      name: 'David & June',
+      contact: 'davidjune@example.com',
+      jobHistory: [
+        { jobId: 'J3', date: '2025-07-05', revenue: 20000, profit: 1800 }
+      ]
+    }
   ]);
 
-  // Live Budget Forecast Data
-  const forecastData = {
-    labels: ['1:1', '1:2', '1:3', '1:4', '1:5', '1:6', '1:7', '1:8', '1:9'],
+  const totalDirectCosts = fuelCost + vehicleCosts + equipmentCosts + materialsCosts;
+  const overheadCosts = (totalDirectCosts * overheadPercentage) / 100;
+  const totalCost = totalDirectCosts + overheadCosts;
+  const profit = jobRevenue - totalCost;
+  const profitMargin = jobRevenue ? (profit / jobRevenue) * 100 : 0;
+
+  const revenueVsCost = {
+    labels: ['Revenue', 'Total Cost', 'Profit'],
+    datasets: [
+      {
+        label: 'Job Financials',
+        data: [jobRevenue, totalCost, profit],
+        backgroundColor: ['#0ea5e9', '#ef4444', '#22c55e']
+      }
+    ]
+  };
+
+  const jaggedLine = {
+    labels: livePoints.map((_, i) => `T+${i}`),
     datasets: [{
-      label: 'Budget Forecast',
-      data: [12000, 11500, 11000, 10500, 10000, 9500, 9000, 8500, 8000],
-      borderColor: '#4f46e5',
-      backgroundColor: 'rgba(79, 70, 229, 0.1)',
+      label: 'Live Profit Trend',
+      data: livePoints,
+      borderColor: '#22d3ee',
+      borderDash: [6, 3],
+      backgroundColor: 'rgba(34,211,238,0.05)',
+      pointRadius: 2,
       tension: 0.4,
       fill: true
     }]
   };
 
-  // Cost Overview Data
-  const costData = {
-    labels: ['Labor', 'Fuel', 'Materials', 'Overhead'],
-    datasets: [{
-      data: [8000, 1500, 2200, 1800],
-      backgroundColor: ['#3b82f6', '#f59e0b', '#10b981', '#ef4444']
-    }]
-  };
+  const topCustomers = customers.map(c => ({
+    name: c.name,
+    avgProfit: c.jobHistory.reduce((s, j) => s + j.profit, 0) / c.jobHistory.length
+  })).sort((a, b) => b.avgProfit - a.avgProfit);
 
-  // Calculate totals
-  const totalBudget = Object.values(budget).reduce((sum, val) => sum + val, 0);
-  const totalLaborCost = teamHours.reduce((sum, member) => sum + (member.hours * member.rate), 0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLivePoints(prev => [...prev.slice(-19), profit]);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [profit]);
+
+  useEffect(() => {
+    const insights: string[] = [];
+    if (profitMargin < 10) insights.push("⚠️ Profit margin is low – check fuel, labor, or overhead costs.");
+    if (jobRevenue < totalCost) insights.push("📉 You're spending more than you're making on this job.");
+    if (fuelCost > 1500) insights.push("⛽ High fuel costs – consider optimizing routes or bundling jobs.");
+    if (overheadCosts > 1000) insights.push("🏢 High overhead – review office, admin, or idle time expenses.");
+    if (insights.length === 0) insights.push("✅ Healthy margin. You're running efficiently.");
+    setAIInsights(insights);
+  }, [profitMargin, totalCost, fuelCost, overheadCosts]);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">Swift & Gentle AI Dashboard</h1>
-        
-        {/* Dashboard Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Budget Tracker */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4 text-indigo-600">Budget Tracker</h2>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span>Labor</span>
-                <span className="font-medium">${budget.labor.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Crew</span>
-                <span className="font-medium">${budget.crew.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Email Tools</span>
-                <span className="font-medium">${budget.emailTools.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Ads</span>
-                <span className="font-medium">${budget.ads.toLocaleString()}</span>
-              </div>
-              <div className="border-t pt-2 mt-2 flex justify-between font-bold">
-                <span>Total Budget</span>
-                <span>${totalBudget.toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
+    <div className="flex min-h-screen text-white bg-gradient-to-br from-black via-gray-900 to-black">
+      {/* Sidebar */}
+      <aside className="w-64 bg-gray-800 p-6">
+        <h2 className="text-xl font-bold text-cyan-300 mb-4">Swift & Gentle</h2>
+        <nav className="space-y-4">
+          <button className="block w-full text-left hover:text-cyan-400">🏠 Dashboard</button>
+          <button className="block w-full text-left hover:text-cyan-400">📦 Jobs</button>
+          <button className="block w-full text-left hover:text-cyan-400">🤖 AI Coach</button>
+          <button className="block w-full text-left hover:text-cyan-400">📈 Reports</button>
+        </nav>
+      </aside>
 
-          {/* Job Cost Analyzer */}
-          <div className="bg-white rounded-xl shadow-md p-6 lg:col-span-2">
-            <h2 className="text-xl font-semibold mb-4 text-green-600">Job Cost Analyzer</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left pb-2">Team</th>
-                    <th className="text-right pb-2">Hours</th>
-                    <th className="text-right pb-2">Hourly Rate</th>
-                    <th className="text-right pb-2">Cost</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {teamHours.map((member) => (
-                    <tr key={member.name} className="border-b">
-                      <td className="py-3">{member.name}</td>
-                      <td className="text-right">{member.hours}</td>
-                      <td className="text-right">${member.rate}</td>
-                      <td className="text-right font-medium">
-                        ${(member.hours * member.rate).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr className="font-bold">
-                    <td className="pt-3">Total</td>
-                    <td className="text-right pt-3">
-                      {teamHours.reduce((sum, m) => sum + m.hours, 0)}
-                    </td>
-                    <td></td>
-                    <td className="text-right pt-3">${totalLaborCost.toLocaleString()}</td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
+      {/* Main Panel */}
+      <main className="flex-1 p-8 space-y-8 overflow-auto">
+        <h1 className="text-3xl font-bold text-cyan-400">Job Cost Analyzer</h1>
 
-          {/* AI Insights */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4 text-purple-600">AI Insights</h2>
-            <div className="space-y-4">
-              <div className="p-3 bg-purple-50 rounded-lg">
-                <p className="text-purple-800">🔍 Optimize operations to increase your revenue potential</p>
-              </div>
-              <div className="p-3 bg-purple-50 rounded-lg">
-                <p className="text-purple-800">💰 Review pricing strategy to enhance job profitability</p>
-              </div>
-              <div className="p-3 bg-purple-50 rounded-lg">
-                <p className="text-purple-800">⚠️ Consider expanding cost risks to minimize budget overruns</p>
-              </div>
-            </div>
+        <section className="grid md:grid-cols-4 gap-6">
+          <div>
+            <label>Job Revenue ($)</label>
+            <input type="number" value={jobRevenue} onChange={e => setJobRevenue(Number(e.target.value))}
+              className="w-full bg-gray-800 p-2 mt-1 rounded text-white border border-cyan-700" />
           </div>
+          <div>
+            <label>Fuel</label>
+            <input type="number" value={fuelCost} onChange={e => setFuelCost(Number(e.target.value))}
+              className="w-full bg-gray-800 p-2 mt-1 rounded text-white border border-cyan-700" />
+          </div>
+          <div>
+            <label>Vehicles</label>
+            <input type="number" value={vehicleCosts} onChange={e => setVehicleCosts(Number(e.target.value))}
+              className="w-full bg-gray-800 p-2 mt-1 rounded text-white border border-cyan-700" />
+          </div>
+          <div>
+            <label>Overhead %</label>
+            <input type="number" value={overheadPercentage} onChange={e => setOverheadPercentage(Number(e.target.value))}
+              className="w-full bg-gray-800 p-2 mt-1 rounded text-white border border-cyan-700" />
+          </div>
+        </section>
 
-          {/* Live Budget Forecast */}
-          <div className="bg-white rounded-xl shadow-md p-6 lg:col-span-2">
-            <h2 className="text-xl font-semibold mb-4 text-blue-600">Live Budget Forecast</h2>
+        <section className="grid md:grid-cols-2 gap-6">
+          <div className="bg-gray-900 p-4 rounded-xl">
+            <h3 className="text-lg font-bold mb-2 text-green-300">Live Profit Tracker</h3>
             <div className="h-64">
-              <Line 
-                data={forecastData} 
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: { display: false }
-                  },
-                  scales: {
-                    y: {
-                      beginAtZero: false,
-                      ticks: {
-                        callback: (value) => `$${value}`
-                      }
-                    }
-                  }
-                }}
-              />
+              <Line data={jaggedLine} options={{ responsive: true, maintainAspectRatio: false }} />
             </div>
           </div>
+          <div className="bg-gray-900 p-4 rounded-xl">
+            <h3 className="text-lg font-bold mb-2 text-green-300">Revenue vs Cost</h3>
+            <Bar data={revenueVsCost} options={{ responsive: true, maintainAspectRatio: false }} />
+          </div>
+        </section>
 
-          {/* Cost Overview */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4 text-red-600">Cost Overview</h2>
-            <div className="h-64">
-              <Pie 
-                data={costData} 
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      position: 'bottom'
-                    }
-                  }
-                }}
-              />
-            </div>
+        <section className="bg-gray-900 p-6 rounded-xl">
+          <h3 className="text-lg font-bold mb-4 text-green-300">AI Revenue Coach</h3>
+          <ul className="list-disc pl-6 space-y-2 text-cyan-100">
+            {aiInsights.map((insight, idx) => <li key={idx}>{insight}</li>)}
+          </ul>
+        </section>
+
+        <section className="bg-gray-900 p-6 rounded-xl">
+          <h3 className="text-lg font-bold mb-4 text-yellow-300">Customer Profitability Leaderboard</h3>
+          <div className="space-y-2">
+            {topCustomers.map((cust, idx) => (
+              <div key={idx} className="flex justify-between border-b border-gray-700 pb-1">
+                <span>{cust.name}</span>
+                <span className="text-green-400">${cust.avgProfit.toFixed(0)}</span>
+              </div>
+            ))}
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 };
 
-export default Dashboard;
+export default EnhancedJobCostDashboard;
