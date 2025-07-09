@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import Login from './login';
 import JobInfoSection from './components/JobInfoSection';
@@ -10,6 +9,7 @@ import { Pie, Line } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
+// Setup
 const DEFAULT_WAGES = {
   chino: 25, cosme: 25, chief: 25, daniel: 25,
   brendon: 13, chengetai: 13, matarutse: 13,
@@ -25,19 +25,27 @@ const DEFAULT_DETAILS = {
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [customerName, setCustomerName] = useState('');
   const [jobRevenue, setJobRevenue] = useState(0);
   const [fuelCost, setFuelCost] = useState(0);
   const [vehicleCosts, setVehicleCosts] = useState(0);
   const [equipmentCosts, setEquipmentCosts] = useState(0);
   const [materialsCosts, setMaterialsCosts] = useState(0);
   const [overheadPercentage, setOverheadPercentage] = useState(15);
-  const [employees, setEmployees] = useState(DEFAULT_WAGES);
+  const [employees] = useState(DEFAULT_WAGES);
   const [hoursWorked, setHoursWorked] = useState({});
   const [showResults, setShowResults] = useState(false);
-  const [activeTab, setActiveTab] = useState('job');
-  const [monthlyRevenue, setMonthlyRevenue] = useState(50000);
+  const [activeTab, setActiveTab] = useState('budget');
+  const [monthlyRevenue] = useState(50000);
   const [departmentDetails, setDepartmentDetails] = useState(DEFAULT_DETAILS);
+  const [liveChartData, setLiveChartData] = useState([4500, 4800, 4700, 5100, 4950, 5200, 5350, 5000, 5500]);
+
+  // Auto update live graph every 3 sec
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLiveChartData(prev => [...prev.slice(1), Math.floor(4500 + Math.random() * 1200)]);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   const departmentBudgets = useMemo(() => {
     const totals = {};
@@ -52,47 +60,6 @@ function App() {
     if (auth === 'true') setIsLoggedIn(true);
   }, []);
 
-  const jobCalculations = useMemo(() => {
-    const laborCosts = {};
-    Object.entries(hoursWorked).forEach(([name, hours]) => {
-      if (hours > 0 && employees[name]) {
-        laborCosts[name] = hours * employees[name];
-      }
-    });
-    const totalLaborCost = Object.values(laborCosts).reduce((sum, cost) => sum + cost, 0);
-    const totalDirectCosts = totalLaborCost + fuelCost + vehicleCosts + equipmentCosts + materialsCosts;
-    const overheadCosts = (totalDirectCosts * overheadPercentage) / 100;
-    const totalCost = totalDirectCosts + overheadCosts;
-    const profit = jobRevenue - totalCost;
-    const profitMargin = jobRevenue > 0 ? (profit / jobRevenue) * 100 : 0;
-    const breakEvenRevenue = totalCost;
-    const totalHours = Object.values(hoursWorked).reduce((sum, hours) => sum + hours, 0);
-    const costPerHour = totalHours > 0 ? totalCost / totalHours : 0;
-    const revenuePerHour = totalHours > 0 ? jobRevenue / totalHours : 0;
-    return {
-      laborCosts, totalLaborCost, totalDirectCosts, overheadCosts, totalCost,
-      profit, profitMargin, breakEvenRevenue, costPerHour, revenuePerHour, totalHours
-    };
-  }, [hoursWorked, fuelCost, vehicleCosts, equipmentCosts, materialsCosts, overheadPercentage, jobRevenue, employees]);
-
-  const budgetChartData = {
-    labels: Object.keys(departmentBudgets),
-    datasets: [{
-      label: 'Budget Distribution',
-      data: Object.values(departmentBudgets),
-      backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6']
-    }]
-  };
-
-  const handleHoursChange = (name, hours) => {
-    setHoursWorked(prev => ({ ...prev, [name]: hours }));
-  };
-
-  const handleAnalyze = () => {
-    setShowResults(true);
-    setActiveTab('results');
-  };
-
   const handleSubChange = (dept, sub, value) => {
     setDepartmentDetails(prev => ({
       ...prev,
@@ -103,92 +70,124 @@ function App() {
     }));
   };
 
+  const lineData = {
+    labels: Array.from({ length: liveChartData.length }, (_, i) => `T-${liveChartData.length - i}`),
+    datasets: [{
+      label: 'Live Expense Tracking',
+      data: liveChartData,
+      borderColor: '#22d3ee',
+      backgroundColor: '#22d3ee44',
+      tension: 0.2,
+      pointRadius: 0,
+      fill: true
+    }]
+  };
+
+  const lineOptions = {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+    },
+    scales: {
+      y: {
+        ticks: {
+          color: '#22d3ee',
+          callback: (val) => `$${val}`
+        },
+        grid: { color: '#1e293b' }
+      },
+      x: {
+        ticks: { color: '#22d3ee' },
+        grid: { display: false }
+      }
+    }
+  };
+
+  const pieData = {
+    labels: Object.keys(departmentBudgets),
+    datasets: [{
+      label: 'Budget Share',
+      data: Object.values(departmentBudgets),
+      backgroundColor: ['#22d3ee', '#34d399', '#818cf8', '#fbbf24', '#f87171']
+    }]
+  };
+
   if (!isLoggedIn) return <Login onLogin={() => setIsLoggedIn(true)} />;
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-black via-gray-900 to-black text-white">
-      <div className="w-64 bg-white/10 backdrop-blur-md shadow-xl border border-green-400 p-6 space-y-6 rounded-3xl m-4">
-        <h2 className="text-xl font-bold text-green-400">Dashboard</h2>
-        {['job', 'team', 'results', 'budget'].map(tab => (
-          (tab === 'results' && !showResults) ? null : (
-            <button key={tab} className={`w-full text-left px-4 py-2 rounded-full border ${activeTab === tab ? 'bg-green-500 text-white font-bold' : 'border-green-300 hover:bg-green-800 transition'}`} onClick={() => setActiveTab(tab)}>
-              {tab.toUpperCase()}
-            </button>
-          )
-        ))}
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white">
+      <div className="p-6 text-center text-3xl font-bold text-cyan-300 tracking-widest shadow-inner">
+        🚀 Swift & Gentle | FUTURE OPS
       </div>
 
-      <div className="flex-1 p-8 space-y-10">
-        <h1 className="text-4xl font-extrabold text-center text-green-300 mb-6 drop-shadow-md tracking-wider">
-          {activeTab === 'budget' ? 'Budget Command Console' : 'Swift & Gentle Mission Control'}
-        </h1>
+      <div className="p-6">
+        <div className="text-center mb-8">
+          <button
+            onClick={() => {
+              const newDept = prompt('New department name:');
+              if (newDept && !departmentDetails[newDept]) {
+                setDepartmentDetails(prev => ({ ...prev, [newDept]: { 'subcategory 1': 0 } }));
+              }
+            }}
+            className="bg-gradient-to-r from-cyan-400 to-blue-600 hover:scale-105 transition px-6 py-3 rounded-full font-bold shadow-md"
+          >
+            + Add Department
+          </button>
+        </div>
 
-        {activeTab === 'job' && <JobInfoSection jobRevenue={jobRevenue} fuelCost={fuelCost} vehicleCosts={vehicleCosts} equipmentCosts={equipmentCosts} materialsCosts={materialsCosts} overheadPercentage={overheadPercentage} onJobRevenueChange={setJobRevenue} onFuelCostChange={setFuelCost} onVehicleCostsChange={setVehicleCosts} onEquipmentCostsChange={setEquipmentCosts} onMaterialsCostsChange={setMaterialsCosts} onOverheadPercentageChange={setOverheadPercentage} />}
-        {activeTab === 'team' && <TeamHoursSection hoursWorked={hoursWorked} wages={employees} onHoursChange={handleHoursChange} />}
-        {activeTab === 'results' && showResults && (
-          <>
-            <ProfitAnalysis {...jobCalculations} jobRevenue={jobRevenue} />
-            <CostChart {...jobCalculations} fuelCost={fuelCost} vehicleCosts={vehicleCosts} equipmentCosts={equipmentCosts} materialsCosts={materialsCosts} />
-            <SummarySection {...jobCalculations} jobRevenue={jobRevenue} fuelCost={fuelCost} vehicleCosts={vehicleCosts} equipmentCosts={equipmentCosts} materialsCosts={materialsCosts} hoursWorked={hoursWorked} />
-          </>
-        )}
-
-        {activeTab === 'budget' && (
-          <div className="space-y-8">
-            <div className="text-center">
-              <button onClick={() => {
-                const newDept = prompt('Enter new department name:');
-                if (newDept && !departmentDetails[newDept]) {
-                  setDepartmentDetails(prev => ({ ...prev, [newDept]: { 'subcategory 1': 0 } }));
-                }
-              }} className="px-6 py-3 bg-gradient-to-r from-green-400 to-blue-500 text-white font-bold rounded-full shadow-md hover:scale-105 transition">
-                + Add Department
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {Object.entries(departmentDetails).map(([dept, subs]) => (
-                <div key={dept} className="bg-white/10 backdrop-blur-xl p-6 rounded-xl shadow-lg border border-green-600">
-                  <h3 className="text-xl text-green-300 font-bold mb-4 flex justify-between items-center">
-                    {dept}
-                    <button onClick={() => {
-                      const newSub = prompt(`New subcategory for ${dept}:`);
-                      if (newSub) {
-                        setDepartmentDetails(prev => ({ ...prev, [dept]: { ...prev[dept], [newSub]: 0 } }));
-                      }
-                    }} className="text-xs bg-gradient-to-r from-green-500 to-teal-400 px-3 py-1 rounded-full text-white shadow hover:scale-105 transition">
-                      + Add
-                    </button>
-                  </h3>
-                  {Object.entries(subs).map(([sub, val]) => (
-                    <div key={sub} className="mb-3">
-                      <label className="block text-sm text-green-200 mb-1 capitalize">{sub}</label>
-                      <input type="number" className="w-full px-3 py-2 rounded-lg border border-green-300 bg-white/10 text-white" value={val} onChange={(e) => handleSubChange(dept, sub, Number(e.target.value))} />
-                    </div>
-                  ))}
-                  <p className="text-sm text-right text-green-400 font-semibold">
-                    Total: ${Object.values(subs).reduce((a, b) => a + b, 0).toLocaleString()}
-                  </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {Object.entries(departmentDetails).map(([dept, subs]) => (
+            <div key={dept} className="bg-white/10 backdrop-blur-lg p-6 rounded-xl border border-cyan-400 shadow-lg">
+              <h3 className="text-lg font-semibold text-cyan-300 flex justify-between items-center mb-4">
+                {dept}
+                <button
+                  onClick={() => {
+                    const sub = prompt(\`New subcategory for \${dept}:\`);
+                    if (sub) {
+                      setDepartmentDetails(prev => ({
+                        ...prev,
+                        [dept]: { ...prev[dept], [sub]: 0 }
+                      }));
+                    }
+                  }}
+                  className="bg-gradient-to-r from-green-400 to-teal-400 text-xs px-3 py-1 rounded-full shadow"
+                >
+                  + Add Sub
+                </button>
+              </h3>
+              {Object.entries(subs).map(([sub, val]) => (
+                <div key={sub} className="mb-3">
+                  <label className="block text-sm text-cyan-200 mb-1 capitalize">{sub}</label>
+                  <input
+                    type="number"
+                    value={val}
+                    onChange={(e) => handleSubChange(dept, sub, Number(e.target.value))}
+                    className="w-full px-3 py-2 rounded-lg border border-cyan-300 bg-black/20 text-white"
+                  />
                 </div>
               ))}
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-xl rounded-xl shadow-lg border border-green-400 p-8">
-              <h2 className="text-2xl font-bold text-green-300 mb-4">Budget Distribution</h2>
-              <div className="h-96 mb-12"><Line data={jaggedLineChartData} options={jaggedLineOptions} /></div><div className="h-96">
-                <Pie data={budgetChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+              <div className="text-right text-cyan-400 font-bold mt-2">
+                Total: ${Object.values(subs).reduce((a, b) => a + b, 0).toLocaleString()}
               </div>
             </div>
-          </div>
-        )}
+          ))}
+        </div>
 
-        {jobRevenue > 0 && activeTab !== 'results' && activeTab !== 'budget' && (
-          <div className="mt-8 text-center">
-            <button onClick={handleAnalyze} className="bg-green-600 text-white px-8 py-3 rounded-xl text-lg font-bold shadow-lg hover:bg-green-500 transition">
-              Analyze Job
-            </button>
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="bg-white/10 backdrop-blur-md rounded-xl shadow-lg p-6 border border-cyan-400">
+            <h2 className="text-xl font-bold text-cyan-300 mb-4">Live Expense Chart</h2>
+            <div className="h-80">
+              <Line data={lineData} options={lineOptions} />
+            </div>
           </div>
-        )}
+
+          <div className="bg-white/10 backdrop-blur-md rounded-xl shadow-lg p-6 border border-cyan-400">
+            <h2 className="text-xl font-bold text-cyan-300 mb-4">Budget Distribution</h2>
+            <div className="h-80">
+              <Pie data={pieData} />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
