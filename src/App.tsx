@@ -8,6 +8,8 @@ import ProfitAnalysis from './components/ProfitAnalysis';
 import CostChart from './components/CostChart';
 import { Pie, Line } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
+import { saveAs } from 'file-saver';
+
 Chart.register(...registerables);
 
 // Setup
@@ -41,7 +43,28 @@ function App() {
   const [liveChartData, setLiveChartData] = useState([4500, 4800, 4700, 5100, 4950, 5200, 5350, 5000, 5500]);
 
   // Auto update live graph every 3 sec
+  
   useEffect(() => {
+    const storedBudgets = localStorage.getItem('departmentBudgets');
+    const storedSpending = localStorage.getItem('departmentSpending');
+    if (storedBudgets) setDepartmentBudgets(JSON.parse(storedBudgets));
+    if (storedSpending) setDepartmentSpending(JSON.parse(storedSpending));
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('departmentBudgets', JSON.stringify(departmentBudgets));
+    localStorage.setItem('departmentSpending', JSON.stringify(departmentSpending));
+  }, [departmentBudgets, departmentSpending]);
+
+  const exportToCSV = () => {
+    let csv = 'Department,Budget,Spent\n';
+    Object.keys(departmentBudgets).forEach(dept => {
+      csv += `${dept},${departmentBudgets[dept]},${departmentSpending[dept] || 0}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    saveAs(blob, 'budget_summary.csv');
+  };
+
     const interval = setInterval(() => {
       setLiveChartData(prev => [...prev.slice(1), Math.floor(4500 + Math.random() * 1200)]);
     }, 3000);
