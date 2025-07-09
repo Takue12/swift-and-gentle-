@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import Login from './login';
 import JobInfoSection from './components/JobInfoSection';
@@ -10,44 +11,17 @@ import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
 const DEFAULT_WAGES = {
-  chino: 25,
-  cosme: 25,
-  chief: 25,
-  daniel: 25,
-  brendon: 13,
-  chengetai: 13,
-  matarutse: 13,
-  rey: 20,
-  intern: 13,
-  sam: 15,
+  chino: 25, cosme: 25, chief: 25, daniel: 25,
+  brendon: 13, chengetai: 13, matarutse: 13,
+  rey: 20, intern: 13, sam: 15
 };
 
 const DEFAULT_DEPARTMENT_DETAILS = {
-  labor: {
-    crew: 6000,
-    interns: 2000,
-    management: 3000
-  },
-  equipment: {
-    truckRental: 3500,
-    dollyRental: 1200,
-    fuel: 1300
-  },
-  materials: {
-    boxes: 4000,
-    blankets: 3000,
-    tape: 2000
-  },
-  marketing: {
-    flyers: 2000,
-    emailTools: 700,
-    socialAds: 1400
-  },
-  operations: {
-    rent: 3000,
-    insurance: 1500,
-    software: 1000
-  }
+  labor: { crew: 6000, interns: 2000, management: 3000 },
+  equipment: { truckRental: 3500, dollyRental: 1200, fuel: 1300 },
+  materials: { boxes: 4000, blankets: 3000, tape: 2000 },
+  marketing: { flyers: 2000, emailTools: 700, socialAds: 1400 },
+  operations: { rent: 3000, insurance: 1500, software: 1000 }
 };
 
 function App() {
@@ -61,8 +35,7 @@ function App() {
   const [overheadPercentage, setOverheadPercentage] = useState<number>(15);
   const [employees, setEmployees] = useState<Record<string, number>>(DEFAULT_WAGES);
   const [hoursWorked, setHoursWorked] = useState<Record<string, number>>({});
-  const [showResults, setShowResults] = useState<boolean>(false);
-
+  const [showResults, setShowResults] = useState(false);
   const [activeTab, setActiveTab] = useState<'job' | 'team' | 'results' | 'budget'>('job');
   const [monthlyRevenue, setMonthlyRevenue] = useState<number>(50000);
   const [departmentDetails, setDepartmentDetails] = useState(DEFAULT_DEPARTMENT_DETAILS);
@@ -87,7 +60,6 @@ function App() {
         laborCosts[name] = hours * employees[name];
       }
     });
-
     const totalLaborCost = Object.values(laborCosts).reduce((sum, cost) => sum + cost, 0);
     const totalDirectCosts = totalLaborCost + fuelCost + vehicleCosts + equipmentCosts + materialsCosts;
     const overheadCosts = (totalDirectCosts * overheadPercentage) / 100;
@@ -98,20 +70,7 @@ function App() {
     const totalHours = Object.values(hoursWorked).reduce((sum, hours) => sum + hours, 0);
     const costPerHour = totalHours > 0 ? totalCost / totalHours : 0;
     const revenuePerHour = totalHours > 0 ? jobRevenue / totalHours : 0;
-
-    return {
-      laborCosts,
-      totalLaborCost,
-      totalDirectCosts,
-      overheadCosts,
-      totalCost,
-      profit,
-      profitMargin,
-      breakEvenRevenue,
-      costPerHour,
-      revenuePerHour,
-      totalHours
-    };
+    return { laborCosts, totalLaborCost, totalDirectCosts, overheadCosts, totalCost, profit, profitMargin, breakEvenRevenue, costPerHour, revenuePerHour, totalHours };
   }, [hoursWorked, fuelCost, vehicleCosts, equipmentCosts, materialsCosts, overheadPercentage, jobRevenue, employees]);
 
   const budgetCalculations = useMemo(() => {
@@ -119,9 +78,7 @@ function App() {
     const totalSpent = totalBudget;
     const remainingBudget = monthlyRevenue - totalSpent;
     return {
-      totalBudget,
-      totalSpent,
-      remainingBudget,
+      totalBudget, totalSpent, remainingBudget,
       revenueVsBudget: monthlyRevenue - totalBudget,
       spendingPercentage: (totalSpent / monthlyRevenue) * 100
     };
@@ -146,128 +103,93 @@ function App() {
     }));
   };
 
-  if (!isLoggedIn) return <Login onLogin={() => setIsLoggedIn(true)} />;
-
-  const hasData = jobRevenue > 0 || Object.values(hoursWorked).some(h => h > 0) ||
-                  fuelCost > 0 || vehicleCosts > 0 || equipmentCosts > 0 || materialsCosts > 0;
-
   const budgetChartData = {
     labels: Object.keys(departmentBudgets),
-    datasets: [
-      {
-        label: 'Budget Breakdown',
-        data: Object.values(departmentBudgets),
-        backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6']
-      }
-    ]
+    datasets: [{
+      label: 'Budget Distribution',
+      data: Object.values(departmentBudgets),
+      backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6']
+    }]
   };
+
+  if (!isLoggedIn) return <Login onLogin={() => setIsLoggedIn(true)} />;
+
+  const hasData = jobRevenue > 0 || Object.values(hoursWorked).some(h => h > 0) || fuelCost > 0 || vehicleCosts > 0 || equipmentCosts > 0 || materialsCosts > 0;
 
   return (
     <div className="min-h-screen flex bg-gradient-to-tr from-green-50 via-white to-green-100">
-      {/* Sidebar */}
       <div className="w-64 bg-white shadow-xl border-green-200 p-6 space-y-6 rounded-3xl m-4">
         <h2 className="text-xl font-bold text-green-700">Dashboard</h2>
         <p className="text-sm text-green-600">Customer: <strong>{customerName || 'N/A'}</strong></p>
         {['job', 'team', 'results', 'budget'].map(tab => (
           (tab === 'results' && !showResults) ? null : (
-            <button
-              key={tab}
-              className={`w-full text-left px-4 py-2 rounded-full border ${activeTab === tab ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent hover:bg-green-100 transition-all'}`}
-              onClick={() => setActiveTab(tab as any)}
-            >
+            <button key={tab} className={\`w-full text-left px-4 py-2 rounded-full border \${activeTab === tab ? 'bg-green-200 border-green-500 font-semibold' : 'border-transparent hover:bg-green-100 transition-all'}\`} onClick={() => setActiveTab(tab as any)}>
               {tab.charAt(0).toUpperCase() + tab.slice(1)} {tab === 'job' ? 'Analyzer' : tab === 'team' ? 'Hours' : tab === 'results' ? 'Results' : 'Dashboard'}
             </button>
           )
         ))}
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 p-8">
-        <h1 className="text-4xl font-extrabold text-center text-green-700 mb-6 drop-shadow">
-          {activeTab === 'budget' ? 'Company Budget Dashboard' : 'Swift & Gentle Job Cost Analyzer'}
-        </h1>
+        <h1 className="text-4xl font-extrabold text-center text-green-700 mb-6 drop-shadow">{activeTab === 'budget' ? 'Company Budget Dashboard' : 'Swift & Gentle Job Cost Analyzer'}</h1>
 
-        {activeTab === 'job' && (
-          <div className="bg-white rounded-xl shadow-lg border border-green-200 p-8">
-            <JobInfoSection {...{ jobRevenue, fuelCost, vehicleCosts, equipmentCosts, materialsCosts, overheadPercentage }}
-              onJobRevenueChange={setJobRevenue}
-              onFuelCostChange={setFuelCost}
-              onVehicleCostsChange={setVehicleCosts}
-              onEquipmentCostsChange={setEquipmentCosts}
-              onMaterialsCostsChange={setMaterialsCosts}
-              onOverheadPercentageChange={setOverheadPercentage}
-            />
-          </div>
-        )}
-
-        {activeTab === 'team' && (
-          <div className="bg-white rounded-xl shadow-lg border border-green-200 p-8">
-            <TeamHoursSection
-              hoursWorked={hoursWorked}
-              wages={employees}
-              onHoursChange={handleHoursChange}
-            />
-          </div>
-        )}
-
+        {activeTab === 'job' && <JobInfoSection {...{ jobRevenue, fuelCost, vehicleCosts, equipmentCosts, materialsCosts, overheadPercentage }} onJobRevenueChange={setJobRevenue} onFuelCostChange={setFuelCost} onVehicleCostsChange={setVehicleCosts} onEquipmentCostsChange={setEquipmentCosts} onMaterialsCostsChange={setMaterialsCosts} onOverheadPercentageChange={setOverheadPercentage} />}
+        {activeTab === 'team' && <TeamHoursSection hoursWorked={hoursWorked} wages={employees} onHoursChange={handleHoursChange} />}
         {activeTab === 'results' && showResults && (
-          <div className="space-y-10">
-            <div className="bg-white rounded-xl shadow-md border border-green-200 p-8">
-              <ProfitAnalysis {...jobCalculations} jobRevenue={jobRevenue} />
-            </div>
-            <div className="bg-white rounded-xl shadow-md border border-green-200 p-8">
-              <CostChart {...jobCalculations} fuelCost={fuelCost} vehicleCosts={vehicleCosts}
-                equipmentCosts={equipmentCosts} materialsCosts={materialsCosts} />
-            </div>
-            <div className="bg-white rounded-xl shadow-md border border-green-200 p-8">
-              <SummarySection {...jobCalculations} jobRevenue={jobRevenue} fuelCost={fuelCost}
-                vehicleCosts={vehicleCosts} equipmentCosts={equipmentCosts} materialsCosts={materialsCosts}
-                hoursWorked={hoursWorked} />
-            </div>
-          </div>
+          <>
+            <ProfitAnalysis {...jobCalculations} jobRevenue={jobRevenue} />
+            <CostChart {...jobCalculations} fuelCost={fuelCost} vehicleCosts={vehicleCosts} equipmentCosts={equipmentCosts} materialsCosts={materialsCosts} />
+            <SummarySection {...jobCalculations} jobRevenue={jobRevenue} fuelCost={fuelCost} vehicleCosts={vehicleCosts} equipmentCosts={equipmentCosts} materialsCosts={materialsCosts} hoursWorked={hoursWorked} />
+          </>
         )}
 
         {activeTab === 'budget' && (
           <div className="space-y-8">
-            {/* Budget Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {[
-                ['Monthly Revenue', monthlyRevenue],
-                ['Total Budget', budgetCalculations.totalBudget],
-                ['Total Spent', budgetCalculations.totalSpent],
-                ['Remaining', budgetCalculations.remainingBudget]
-              ].map(([label, value], i) => (
-                <div key={i} className="bg-white p-6 rounded-xl shadow-md border border-green-200">
-                  <h3 className="text-green-700 font-semibold">{label}</h3>
-                  <p className={`text-2xl font-bold ${label === 'Remaining' && value < 0 ? 'text-red-600' : 'text-green-700'}`}>
-                    ${Number(value).toLocaleString()}
-                  </p>
-                </div>
-              ))}
+            <div className="text-center">
+              <button onClick={() => {
+                const newDept = prompt('Enter new department name:');
+                if (newDept && !departmentDetails[newDept]) {
+                  setDepartmentDetails(prev => ({
+                    ...prev,
+                    [newDept]: { 'subcategory 1': 0 }
+                  }));
+                }
+              }} className="mt-6 px-6 py-3 bg-gradient-to-r from-green-400 via-teal-500 to-blue-500 text-white font-bold rounded-full shadow-xl hover:shadow-green-500 hover:scale-105 transition-all duration-300">
+                + Add Department
+              </button>
             </div>
 
-            {/* Department Input Panels */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {Object.entries(departmentDetails).map(([dept, subs]) => (
-                <div key={dept} className="bg-white/80 backdrop-blur-md p-6 rounded-xl shadow border border-green-200">
-                  <h3 className="text-xl text-green-700 font-semibold capitalize mb-4">{dept}</h3>
+                <div key={dept} className="bg-white/80 backdrop-blur-md p-6 rounded-xl shadow-xl border border-green-300">
+                  <h3 className="text-xl text-green-700 font-semibold capitalize mb-4 flex justify-between items-center">
+                    {dept}
+                    <button onClick={() => {
+                      const newSub = prompt(\`New subcategory for \${dept}:\`);
+                      if (newSub) {
+                        setDepartmentDetails(prev => ({
+                          ...prev,
+                          [dept]: {
+                            ...prev[dept],
+                            [newSub]: 0
+                          }
+                        }));
+                      }
+                    }} className="text-sm bg-gradient-to-r from-cyan-500 to-green-400 px-3 py-1 rounded-full text-white font-semibold shadow hover:scale-105 hover:shadow-lg transition-all">
+                      + Add Subcategory
+                    </button>
+                  </h3>
                   {Object.entries(subs).map(([sub, val]) => (
                     <div key={sub} className="mb-3">
                       <label className="block text-sm text-green-600 mb-1 capitalize">{sub}</label>
-                      <input
-                        type="number"
-                        className="w-full px-3 py-2 rounded-lg border border-green-300 bg-white/60"
-                        value={val}
-                        onChange={(e) => handleSubChange(dept, sub, Number(e.target.value))}
-                      />
+                      <input type="number" className="w-full px-3 py-2 rounded-lg border border-green-300 bg-white/60" value={val} onChange={(e) => handleSubChange(dept, sub, Number(e.target.value))} />
                     </div>
                   ))}
-                  <p className="text-sm mt-3 text-right text-green-700">Total: ${departmentBudgets[dept].toLocaleString()}</p>
+                  <p className="text-sm mt-3 text-right text-green-700">Total: ${departmentBudgets[dept]?.toLocaleString()}</p>
                 </div>
               ))}
             </div>
 
-            {/* Pie Chart */}
             <div className="bg-white rounded-xl shadow-md border border-green-200 p-8">
               <h2 className="text-xl font-bold text-green-700 mb-4">Budget Distribution</h2>
               <div className="h-96">
@@ -279,10 +201,7 @@ function App() {
 
         {hasData && activeTab !== 'results' && activeTab !== 'budget' && (
           <div className="mt-8 text-center">
-            <button
-              onClick={handleAnalyze}
-              className="bg-green-600 text-white px-8 py-3 rounded-xl text-lg font-semibold shadow hover:bg-green-700 transition"
-            >
+            <button onClick={handleAnalyze} className="bg-green-600 text-white px-8 py-3 rounded-xl text-lg font-semibold shadow hover:bg-green-700 transition">
               Analyze Job
             </button>
           </div>
@@ -293,4 +212,3 @@ function App() {
 }
 
 export default App;
-
