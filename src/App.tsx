@@ -3,6 +3,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Line, Pie } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
+import { Line } from 'react-chartjs-2';
+
 
 // Wages for default employees
 const DEFAULT_WAGES = {
@@ -20,7 +22,23 @@ const DEFAULT_SUBCATEGORIES = {
   materials: { boxes: 2000, wrap: 800 }
 };
 
-export default function App() {
+export default 
+  const forecastData = {
+    labels: ['Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    datasets: [{
+      label: 'Forecasted Expenses',
+      data: [12000, 13500, 15000, 14800, 15200],
+      borderColor: '#0ea5e9',
+      backgroundColor: 'rgba(14,165,233,0.1)',
+      borderDash: [6, 6],
+      tension: 0.4,
+      fill: true,
+      pointRadius: 3,
+      pointBackgroundColor: '#0ea5e9',
+    }]
+  };
+
+function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [activeTab, setActiveTab] = useState("budget");
   const [subcategories, setSubcategories] = useState(DEFAULT_SUBCATEGORIES);
