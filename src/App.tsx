@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FiPlus, FiTrash2, FiEdit } from 'react-icons/fi';
 import { Pie, Bar } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
@@ -85,55 +85,82 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white p-6">
-      <h1 className="text-3xl font-extrabold text-center text-cyan-400 mb-10">🚀 Swift & Gentle AI Dashboard</h1>
+    <div className="min-h-screen bg-gradient-to-br from-[#0f172a] to-[#1e293b] text-white p-6">
+      <h1 className="text-4xl font-extrabold text-center text-cyan-400 mb-10">🚀 Swift & Gentle AI Dashboard</h1>
+
       <div className="flex space-x-4 mb-8 justify-center">
-        <button onClick={() => setActiveTab('job')} className="bg-blue-600 px-4 py-2 rounded">Job Cost</button>
-        <button onClick={() => setActiveTab('budget')} className="bg-green-600 px-4 py-2 rounded">Budget</button>
-        <button onClick={() => setActiveTab('results')} className="bg-purple-600 px-4 py-2 rounded">Insights</button>
+        <button onClick={() => setActiveTab('job')} className="bg-blue-600 px-6 py-2 rounded hover:bg-blue-700">Job Cost</button>
+        <button onClick={() => setActiveTab('budget')} className="bg-green-600 px-6 py-2 rounded hover:bg-green-700">Budget</button>
+        <button onClick={() => setActiveTab('results')} className="bg-purple-600 px-6 py-2 rounded hover:bg-purple-700">Insights</button>
       </div>
 
       {activeTab === 'job' && (
-        <div className="space-y-4">
-          <input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Customer Name" className="w-full p-2 bg-gray-800 rounded"/>
-          <input type="number" value={jobRevenue} onChange={e => setJobRevenue(+e.target.value)} placeholder="Job Revenue" className="w-full p-2 bg-gray-800 rounded"/>
+        <div className="space-y-6">
+          <input
+            type="text"
+            value={customerName}
+            onChange={e => setCustomerName(e.target.value)}
+            placeholder="Customer Name"
+            className="w-full p-3 bg-gray-800 border border-cyan-600 rounded"
+          />
+          <input
+            type="number"
+            value={jobRevenue}
+            onChange={e => setJobRevenue(+e.target.value)}
+            placeholder="Job Revenue"
+            className="w-full p-3 bg-gray-800 border border-cyan-600 rounded"
+          />
+
           <div className="grid grid-cols-2 gap-4">
             {Object.keys(DEFAULT_WAGES).map(name => (
               <div key={name} className="flex flex-col">
-                <label>{name}</label>
-                <input type="number" className="p-2 bg-gray-700 rounded" placeholder="Hours worked" value={hoursWorked[name] || ''} onChange={e => handleHoursChange(name, +e.target.value)} />
+                <label className="text-sm text-gray-300 mb-1">{name}</label>
+                <input
+                  type="number"
+                  className="p-2 bg-gray-800 border border-cyan-700 rounded"
+                  placeholder="Hours worked"
+                  value={hoursWorked[name] || ''}
+                  onChange={e => handleHoursChange(name, +e.target.value)}
+                />
               </div>
             ))}
           </div>
-          <button onClick={() => setShowResults(true)} className="mt-4 bg-indigo-600 px-6 py-2 rounded">Analyze</button>
+
+          <button
+            onClick={() => setShowResults(true)}
+            className="mt-6 bg-indigo-600 hover:bg-indigo-700 px-6 py-2 rounded shadow"
+          >
+            Analyze
+          </button>
         </div>
       )}
 
       {activeTab === 'budget' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-gray-800 p-6 rounded">
-            <h2 className="text-xl font-bold mb-4">Department Budget</h2>
+          <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+            <h2 className="text-xl font-bold text-cyan-400 mb-4">Department Budget</h2>
             <Bar data={budgetChartData} />
           </div>
-          <div className="bg-gray-800 p-6 rounded">
-            <h2 className="text-xl font-bold mb-4">Cost Breakdown</h2>
+          <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+            <h2 className="text-xl font-bold text-cyan-400 mb-4">Cost Breakdown</h2>
             <Pie data={costBreakdownData} />
           </div>
         </div>
       )}
 
       {activeTab === 'results' && showResults && (
-        <div className="bg-gray-900 p-6 rounded shadow-lg mt-6 space-y-4">
-          <h2 className="text-2xl font-bold text-cyan-300">📈 AI Revenue Insights</h2>
-          <p>Total Revenue: ${jobRevenue.toLocaleString()}</p>
-          <p>Total Cost: ${jobCalculations.totalCost.toFixed(2)}</p>
-          <p>Profit: ${jobCalculations.profit.toFixed(2)}</p>
-          <p>Profit Margin: {jobCalculations.profitMargin.toFixed(2)}%</p>
-          <div className="bg-gray-700 p-4 rounded mt-4">
+        <div className="bg-gray-900 p-6 rounded-lg shadow-lg mt-6 space-y-4">
+          <h2 className="text-2xl font-bold text-cyan-300">📊 AI Revenue Insights</h2>
+          <p>Total Revenue: <span className="text-green-400">${jobRevenue.toLocaleString()}</span></p>
+          <p>Total Cost: <span className="text-yellow-400">${jobCalculations.totalCost.toFixed(2)}</span></p>
+          <p>Profit: <span className="text-purple-400">${jobCalculations.profit.toFixed(2)}</span></p>
+          <p>Profit Margin: <span className="text-cyan-400">{jobCalculations.profitMargin.toFixed(2)}%</span></p>
+
+          <div className={`bg-gray-800 p-4 rounded mt-4 ${jobCalculations.profitMargin < 15 ? 'border-l-4 border-red-600' : 'border-l-4 border-green-600'}`}>
             {jobCalculations.profitMargin < 15 ? (
-              <p className="text-red-400">⚠️ Margin is below 15%. Consider raising prices or cutting vehicle/material costs.</p>
+              <p className="text-red-400">⚠️ Margin is below 15%. Consider raising prices or cutting costs.</p>
             ) : (
-              <p className="text-green-400">✅ Profit margin is healthy. Keep optimizing labor and fuel usage.</p>
+              <p className="text-green-400">✅ Profit margin is strong. Keep optimizing fuel & labor efficiency.</p>
             )}
           </div>
         </div>
