@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { FiPlus, FiTrash2, FiEdit, FiTrendingUp } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiEdit } from 'react-icons/fi';
 import { Pie, Bar } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
@@ -15,7 +15,7 @@ const DEFAULT_WAGES = {
   matarutse: 13,
   rey: 20,
   intern: 13,
-  sam: 15,
+  sam: 15
 };
 
 const DEFAULT_BUDGET_ITEMS = {
@@ -52,6 +52,7 @@ const App = () => {
   const [employees, setEmployees] = useState(DEFAULT_WAGES);
   const [hoursWorked, setHoursWorked] = useState<Record<string, number>>({});
   const [showResults, setShowResults] = useState(false);
+  const [newTeamMember, setNewTeamMember] = useState({ name: '', rate: 0 });
 
   // Budget Dashboard State
   const [activeTab, setActiveTab] = useState<'job' | 'team' | 'results' | 'budget'>('job');
@@ -112,6 +113,34 @@ const App = () => {
     return { departmentTotals, totalBudget };
   }, [budgetItems]);
 
+  // AI Insights
+  const aiInsights = useMemo(() => {
+    const insights = [];
+    
+    // Labor efficiency insight
+    const avgEfficiency = Object.values(budgetItems.labor).reduce((sum, item) => sum + item.efficiency, 0) / budgetItems.labor.length;
+    if (avgEfficiency < 60) {
+      insights.push("⚠️ Labor efficiency is low. Consider additional training or process improvements.");
+    }
+    
+    // Profit margin insight
+    if (jobCalculations.profitMargin < 10) {
+      insights.push("💰 Profit margin is below 10%. Review pricing or reduce costs.");
+    }
+    
+    // High cost areas
+    if (budgetCalculations.departmentTotals.materials > jobRevenue * 0.3) {
+      insights.push("🛠️ Material costs are high. Explore bulk purchasing or alternative suppliers.");
+    }
+    
+    // Team utilization
+    if (Object.values(hoursWorked).filter(h => h > 40).length > 3) {
+      insights.push("⏱️ Multiple team members with overtime. Consider hiring or redistributing workload.");
+    }
+    
+    return insights.length > 0 ? insights : ["✅ All metrics look good. Maintain current operations."];
+  }, [jobCalculations, budgetItems, budgetCalculations, hoursWorked, jobRevenue]);
+
   // Handlers
   const handleHoursChange = (name: string, hours: number) => {
     setHoursWorked(prev => ({ ...prev, [name]: hours }));
@@ -155,6 +184,32 @@ const App = () => {
     }));
   };
 
+  const addTeamMember = () => {
+    if (!newTeamMember.name.trim() || newTeamMember.rate <= 0) return;
+    
+    setEmployees(prev => ({
+      ...prev,
+      [newTeamMember.name.toLowerCase()]: newTeamMember.rate
+    }));
+    
+    setHoursWorked(prev => ({
+      ...prev,
+      [newTeamMember.name.toLowerCase()]: 0
+    }));
+    
+    setNewTeamMember({ name: '', rate: 0 });
+  };
+
+  const removeTeamMember = (name: string) => {
+    const newEmployees = { ...employees };
+    delete newEmployees[name];
+    setEmployees(newEmployees);
+    
+    const newHoursWorked = { ...hoursWorked };
+    delete newHoursWorked[name];
+    setHoursWorked(newHoursWorked);
+  };
+
   if (!isLoggedIn) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
@@ -175,7 +230,7 @@ const App = () => {
   const hasJobData = jobRevenue > 0 || Object.values(hoursWorked).some(hours => hours > 0) || 
                     fuelCost > 0 || vehicleCosts > 0 || equipmentCosts > 0 || materialsCosts > 0;
 
-  // Budget Chart Data
+  // Budget Chart Data (static now)
   const budgetChartData = {
     labels: Object.keys(budgetItems),
     datasets: [{
@@ -187,6 +242,16 @@ const App = () => {
         'rgba(75, 192, 192, 0.6)',
         'rgba(153, 102, 255, 0.6)'
       ]
+    }]
+  };
+
+  // Team Hours Chart Data
+  const teamHoursData = {
+    labels: Object.keys(employees),
+    datasets: [{
+      label: 'Hours Worked',
+      data: Object.keys(employees).map(name => hoursWorked[name] || 0),
+      backgroundColor: 'rgba(79, 70, 229, 0.6)'
     }]
   };
 
@@ -227,7 +292,120 @@ const App = () => {
 
       {/* Main Content */}
       <div className="flex-1 p-8 overflow-auto">
-        {activeTab !== 'budget' ? (
+        {activeTab === 'team' ? (
+          <>
+            <h1 className="text-3xl font-bold mb-6">Team Management</h1>
+            
+            {/* Add Team Member */}
+            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+              <h2 className="text-xl font-semibold mb-4">Add New Team Member</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1">Name</label>
+                  <input
+                    type="text"
+                    value={newTeamMember.name}
+                    onChange={(e) => setNewTeamMember({...newTeamMember, name: e.target.value})}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1">Hourly Rate ($)</label>
+                  <input
+                    type="number"
+                    value={newTeamMember.rate}
+                    onChange={(e) => setNewTeamMember({...newTeamMember, rate: Number(e.target.value)})}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+              </div>
+              <button
+                onClick={addTeamMember}
+                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                Add Team Member
+              </button>
+            </div>
+
+            {/* Team Hours Chart */}
+            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+              <h2 className="text-xl font-semibold mb-4">Team Hours Distribution</h2>
+              <div className="h-64">
+                <Bar 
+                  data={teamHoursData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                      y: {
+                        beginAtZero: true
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Team Hours Table */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-xl font-semibold mb-4">Team Hours</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left pb-2">Team Member</th>
+                      <th className="text-right pb-2">Hourly Rate</th>
+                      <th className="text-right pb-2">Hours Worked</th>
+                      <th className="text-right pb-2">Total Cost</th>
+                      <th className="text-right pb-2">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(employees).map(([name, rate]) => (
+                      <tr key={name} className="border-b">
+                        <td className="py-3 capitalize">{name}</td>
+                        <td className="text-right">${rate}</td>
+                        <td className="text-right">
+                          <input
+                            type="number"
+                            value={hoursWorked[name] || 0}
+                            onChange={(e) => handleHoursChange(name, Number(e.target.value))}
+                            className="w-20 p-1 border rounded text-right"
+                          />
+                        </td>
+                        <td className="text-right">
+                          ${((hoursWorked[name] || 0) * rate).toLocaleString()}
+                        </td>
+                        <td className="text-right">
+                          <button
+                            onClick={() => removeTeamMember(name)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <FiTrash2 />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="font-bold">
+                      <td className="pt-3">Total</td>
+                      <td></td>
+                      <td className="text-right pt-3">
+                        {Object.values(hoursWorked).reduce((sum, hours) => sum + (hours || 0), 0)}
+                      </td>
+                      <td className="text-right pt-3">
+                        ${Object.entries(employees).reduce((sum, [name, rate]) => 
+                          sum + ((hoursWorked[name] || 0) * rate), 0).toLocaleString()}
+                      </td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </>
+        ) : activeTab !== 'budget' ? (
           <>
             <h1 className="text-3xl font-bold mb-6">Job Cost Analysis</h1>
             
@@ -266,24 +444,6 @@ const App = () => {
               </div>
             )}
 
-            {activeTab === 'team' && (
-              <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h2 className="text-xl font-bold mb-4">Team Hours</h2>
-                {Object.entries(employees).map(([name, wage]) => (
-                  <div key={name} className="flex items-center mb-3">
-                    <span className="w-32 capitalize">{name}</span>
-                    <input
-                      type="number"
-                      value={hoursWorked[name] || 0}
-                      onChange={(e) => handleHoursChange(name, Number(e.target.value))}
-                      className="w-20 p-2 border rounded"
-                    />
-                    <span className="ml-2">hours @ ${wage}/hr</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
             {activeTab === 'results' && showResults && (
               <div className="space-y-6">
                 <div className="bg-white rounded-lg shadow-md p-6">
@@ -303,6 +463,17 @@ const App = () => {
                       <h3 className="font-semibold">Profit</h3>
                       <p className="text-2xl">${jobCalculations.profit.toLocaleString()}</p>
                     </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h2 className="text-xl font-bold mb-4">AI Insights</h2>
+                  <div className="space-y-3">
+                    {aiInsights.map((insight, index) => (
+                      <div key={index} className="p-3 bg-blue-50 rounded-lg">
+                        <p className="text-blue-800">{insight}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -475,7 +646,10 @@ const App = () => {
                       data={budgetChartData}
                       options={{
                         responsive: true,
-                        maintainAspectRatio: false
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: { display: false }
+                        }
                       }}
                     />
                   </div>
